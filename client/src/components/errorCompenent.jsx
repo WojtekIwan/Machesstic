@@ -9,7 +9,7 @@ function ErrorComponent(){
                 <img src={notFound} id="error_gif" alt="Not found gif"/>
                 <h2>Error 404</h2>
                 <p>You get lost! This page dosen`t exist.</p>
-                <Link className="link" to={"/"}>Go back home</Link>
+                <Link className="link" to={"/"}>Go back</Link>
             </div>
         </div>
     )
