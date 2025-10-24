@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Abel&family=Bangers&display=swap');
+
+:root{
+    --dark-blue: #1A1423;
+    --blue: #3454D1;
+    --light-blue: #00A5E0;
+    --white: #F8F8F8;
+    --gray: #585A5F;
+
+    --header-font: "Bangers";
+    --text-font: "Abel";
+}
+
+body{
+    margin: 0rem;
+}
+
+.main{
+    width: 100%;
+    height: 100vh;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: var(--dark-blue);
+}
+
+h2{
+    color: var(--white);
+    font-family: var(--header-font);
+    font-size: 3rem;
+    letter-spacing: 0.2rem;
+    margin-bottom: 0rem;
+    text-align: center;
+}
+
+p{
+    color: var(--white);
+    font-family: var(--text-font);
+    font-size: 1.25rem;
+    letter-spacing: 0.1rem;
+    margin-bottom: 0rem;
+    text-align: center;
+}
+
+.link{
+    width: 15rem;
+    height: 3rem;
+
+    border-radius: 1rem;
+
+    background-color: var(--blue);
+
+    color: var(--white);
+    font-family: var(--text-font);
+    font-size: 1.25rem;
+    text-decoration: none;
+    
+    margin-top: 2rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.link:hover{
+    background-color: var(--light-blue);
+    color: var(--white);
+    border: 0.1rem solid var(--white);
+}

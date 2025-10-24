@@ -1,0 +1,17 @@
+@import url("./main_styles.css");
+
+#error_gif{
+    width: 18rem;
+    height: 18rem;
+    border-radius: 1rem;
+}
+
+#error_element{
+    width: 20rem;
+    height: 35rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
