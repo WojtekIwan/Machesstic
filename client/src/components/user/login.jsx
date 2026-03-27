@@ -16,8 +16,8 @@ function Login(){
             <div>
                 <h2>Log into Machesstic</h2>
 
-                <label htmlFor="usernameOrPassowrd">Enter your email or username:</label>
-                <input type="text" id="usernameOrPassowrd" onChange={(e) => setUsernameOrEmail(p => e.target.value)}/>
+                <label htmlFor="usernameOrEmail">Enter your email or username:</label>
+                <input type="text" id="usernameOrEmail" onChange={(e) => setUsernameOrEmail(p => e.target.value)}/>
 
                 <label htmlFor="password">Enter your password:</label>
                 <input type="password" id="password" onChange={(e) => setPassword(p => e.target.value)}/>

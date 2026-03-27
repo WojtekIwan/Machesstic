@@ -12,12 +12,12 @@ user_router.post("/create_user", async (req, res) => {
     let password_diffrent = req.body.password === req.body.repeatePassword
 
     if(req.body.username == "" || req.body.email == "" || req.body.password == "" || req.body.repeatePassword == ""){
-        return res.status(400).send({message: "You need to fill all of the fields"}) 
+        return res.send({code: 400, message: "You need to fill all of the fields"}) 
     }
 
     [username_in_database, email_in_database, password_diffrent].forEach((element) => {
         if(element){
-            return res.status(400).send({message: element})
+            return res.status(400).send({code: 400, message: element})
         }
     })
 
