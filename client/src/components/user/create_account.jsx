@@ -7,6 +7,8 @@ function CreateAccount(){
     const [password, setPassword] = useState("")
     const [repeatePassword, setRepeatPassword] = useState("")
 
+    const [errorMessage, setErrorMessage] = useState("")
+
     function create_account(e){
         e.preventDefault()
         console.log(`Username: ${username} email: ${email} password: ${password} repated password: ${repeatePassword}`)
@@ -18,7 +20,10 @@ function CreateAccount(){
             "repeatePassword": repeatePassword
         }).then((res) => {
             if(res.data.code == 400){
+                setErrorMessage(p => res.data.message)
                 console.log(res.data.message)
+            }else if(res.status == 200){
+                console.log("Succesfull")
             }
         })
     }
@@ -39,6 +44,7 @@ function CreateAccount(){
             <label htmlFor="repeated_password">Enter your email:</label>
             <input type="password" id="repeated_password" onChange={(e) => setRepeatPassword(p => e.target.value)}/>
 
+            <p>{errorMessage}</p>
             <button onClick={(e) => create_account(e)}>Create your account</button>
         </div>
     )
