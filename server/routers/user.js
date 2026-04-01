@@ -15,15 +15,15 @@ user_router.post("/create_user", async (req, res) => {
         return res.send({code: 400, message: "You need to fill all of the fields"}) 
     }
 
-    [username_in_database, email_in_database, password_diffrent].forEach((element) => {
-        if(element){
-            return res.send({code: 400, message: element})
+    let data = [username_in_database, email_in_database, password_diffrent]
+    for(let i = 0; i < data.length; i++){
+        if(data[i]){
+            return res.send({code: 400, message: data[i]})
         }
-    })
+    }
 
-    console.log("Everything is okay with data. Procesing to add it to database")
-
-    return res.status(200)
+    let result = await dc.add_user_to_database(req.body.username, req.body.email, req.body.password)
+    return res.send({code: result.status, message: result.message})
 })
 
 export default user_router
