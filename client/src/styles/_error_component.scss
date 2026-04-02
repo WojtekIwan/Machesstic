@@ -1,0 +1,18 @@
+// ****************************************************************************
+//                          Error 404 component
+// ****************************************************************************
+@use "./varibles" as *;
+
+#error-component{
+    @include center_component("column");
+    div{
+        text-align: center;
+        h2{
+            @include h1_to_h3($h2Size);
+        }
+
+        .link{
+            @include link_to_page();
+        }
+    }
+}
