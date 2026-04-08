@@ -1,0 +1,47 @@
+Here is a place for code that might be useful in future:
+
+Fancy border
+
+@mixin fancy_border(){
+    z-index: 0;
+    position: relative;
+	overflow: hidden;
+
+    @keyframes rotate {
+        100% {
+            transform: rotate(1turn);
+        }
+    }
+
+    &::before {
+		content: '';
+		position: absolute;
+		z-index: -2;
+		left: -50%;
+		top: -50%;
+		width: 200%;
+		height: 550%;
+		background-color: #399953;
+		background-repeat: no-repeat;
+		background-size: 50% 50%, 50% 50%;
+		background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+		background-image: 
+            linear-gradient($additionalGreen, $additionalGreen),
+            linear-gradient($additionalGreen, $additionalGreen),
+            linear-gradient($additionalCyan, $additionalCyan),
+            linear-gradient($additionalCyan, $additionalCyan);
+		animation: rotate 8s linear infinite;
+	}
+	
+	&::after {
+		content: '';
+		position: absolute;
+		z-index: -1;
+		left: 0.2rem;
+		top: 0.2rem;
+		width: calc(100% - 0.4rem);
+		height: calc(100% - 0.4rem);
+		background: $backgroundColor;
+		border-radius: 0.2rem;
+    }
+}

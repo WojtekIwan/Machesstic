@@ -1,5 +1,6 @@
 import axios from "axios"
 import { useState } from "react"
+import "../../styles/main.scss"
 
 function CreateAccount(){
     const [username, setUsername] = useState("")
@@ -24,28 +25,28 @@ function CreateAccount(){
                 console.log(res.data.message)
             }else if(res.status == 200){
                 console.log("Succesfull")
+                // Redirecting to log in page (token is not created yet)
             }
         })
     }
 
     return (
-        <div>
-            <h2>Create account in Machesstic</h2>
+        <div id="create-account-form">
+            <div>
+                <h2>Create account in Machesstic</h2>
+                <input type="text" id="username" placeholder="Enter your username" onChange={(e) => setUsername(p => e.target.value)}/>
 
-            <label htmlFor="username">Enter your username:</label>
-            <input type="text" id="username" onChange={(e) => setUsername(p => e.target.value)}/>
+                <input type="email" id="email" placeholder="Enter your email" onChange={(e) => setEmail(p => e.target.value)}/>
 
-            <label htmlFor="email">Enter your email:</label>
-            <input type="email" id="email" onChange={(e) => setEmail(p => e.target.value)}/>
 
-            <label htmlFor="password">Create a password:</label>
-            <input type="password" id="password" onChange={(e) => setPassword(p => e.target.value)}/>
+                <input type="password" id="password" placeholder="Enter password" onChange={(e) => setPassword(p => e.target.value)}/>
 
-            <label htmlFor="repeated_password">Enter your email:</label>
-            <input type="password" id="repeated_password" onChange={(e) => setRepeatPassword(p => e.target.value)}/>
+                <input type="password" id="repeated_password" placeholder="Repeat your password" onChange={(e) => setRepeatPassword(p => e.target.value)}/>
 
-            <p>{errorMessage}</p>
-            <button onClick={(e) => create_account(e)}>Create your account</button>
+                <p>{errorMessage}</p>
+
+                <button onClick={(e) => create_account(e)}>Create your account</button>
+            </div>
         </div>
     )
 }

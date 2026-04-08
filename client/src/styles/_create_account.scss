@@ -1,0 +1,30 @@
+@use "./varibles" as *;
+
+#create-account-form{
+    @include center_component(100%, 100vh, column, $backgroundColor);
+
+    div{
+        @include center_component(30%, 32.5rem, column, $backgroundColorSecondary);
+        border-radius: 0.2rem;
+        padding-top: 1rem;
+        box-shadow: 0 0 2rem 0rem $additionalCyan;
+
+        h2{
+            @include h1_to_h3($h3Size);
+        }
+
+        input{
+            @include input();
+            margin-top: 1.25rem;
+            margin-bottom: 1.25rem; 
+        }
+
+        p{
+            @include error_paragraph();
+        }
+
+        button{
+            @include button($backgroundColor, $fontColor);
+        }
+    }
+}

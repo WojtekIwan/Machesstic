@@ -4,7 +4,7 @@
 @use "./varibles" as *;
 
 #error-component{
-    @include center_component("column");
+    @include center_component(100%, 100vh, "column", $backgroundColor);
     div{
         text-align: center;
         h2{
