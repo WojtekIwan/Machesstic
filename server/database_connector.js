@@ -21,7 +21,14 @@ class DatabaseConnector{
     //                                  User section
     // **********************************************************************************
 
+    // Is username in database
     async username_in_database(username){
+        let correct_username = this.validate_username(username)
+        if(!correct_username){
+            return "Username cant contain special characters or spaces!"
+        }
+        
+        // Checking if username is already in database
         let records = await this.pool.query("select * from user_basic where user_basic.username = ?;", [username])
         if(records[0].length != 0){
             let error = "This username is already taken!"
@@ -31,12 +38,23 @@ class DatabaseConnector{
         return false
     }
 
+    // Validating username
+    validate_username(username){
+        let restricted_signs = " =+ \"\\/?()[]{}|*:;'`~<>" // Forbiden characters
+        for(let i = 0; i < username.length; i++){
+            if(restricted_signs.includes(username[i])){
+                return false
+            }
+        }
+        return true
+    }
+
     async email_in_database(email){
         let records = await this.pool.query("select * from user_basic where user_basic.email = ?;", [email])
         if(records[0].length != 0){
             let error = "This email is already in use!"
             console.log(`Database error: ${error}`)
-            return error
+            return {code: 400, message: error}
         }
         return false
     }
@@ -47,7 +65,7 @@ class DatabaseConnector{
 
         bycrpt.hash(password, 10, async (err, hash) => {
             if(err){
-                return {status: 400, message: "Problem with hashing a password."}
+                return {code: 400, message: "Problem with hashing a password."}
 
             }else{
                 hashed_password = hash
@@ -63,8 +81,24 @@ class DatabaseConnector{
                 }
             }
         })
-        if(error) return {status: 400, message: "Unexpected error appered!"}
-        return {status: 200, message: "User has been added to database"}
+        if(error) return {code: 400, message: "Unexpected error appered!"}
+        return {code: 200, message: "User has been added to database"}
+    }
+
+    // Checking if user creadtentials are correct
+    async log_user_in(usernameOrEmail, password){
+        let result = await this.pool.query(`Select * from user_basic where 
+            ${usernameOrEmail.includes("@") ? 'email' : 'username'} = ?;`, [usernameOrEmail])
+        
+        if(result[0].length == 0){
+            return {code: 400, message: "User not found in database"}
+        }
+
+        let check_password = await bycrpt.compare(password, result[0][0]["password"])
+        if(check_password){
+            return {code: 200, data: result[0]}
+        }
+        return {code: 400, message: "Wrong password"}
     }
 }
 

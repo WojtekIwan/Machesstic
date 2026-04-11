@@ -23,7 +23,15 @@ user_router.post("/create_user", async (req, res) => {
     }
 
     let result = await dc.add_user_to_database(req.body.username, req.body.email, req.body.password)
-    return res.send({code: result.status, message: result.message})
+    return res.send({code: result.code, message: result.message})
+})
+
+user_router.post("/login", async (req, res) => {
+    if(req.body.usernameOrEmail == "" || req.body.password == ""){
+        return res.send({code: 400, message: "You need to fill all of the fields"}) 
+    }
+    let result = await dc.log_user_in(req.body.usernameOrEmail, req.body.password)
+    return res.send(result)
 })
 
 export default user_router

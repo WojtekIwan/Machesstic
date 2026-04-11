@@ -26,6 +26,7 @@ function CreateAccount(){
             }else if(res.status == 200){
                 console.log("Succesfull")
                 // Redirecting to log in page (token is not created yet)
+                window.location = "/login"
             }
         })
     }
@@ -34,14 +35,14 @@ function CreateAccount(){
         <div id="create-account-form">
             <div>
                 <h2>Create account in Machesstic</h2>
-                <input type="text" id="username" placeholder="Enter your username" onChange={(e) => setUsername(p => e.target.value)}/>
+                <input type="text" id="username" placeholder="Enter your username..." onChange={(e) => setUsername(p => e.target.value)}/>
 
-                <input type="email" id="email" placeholder="Enter your email" onChange={(e) => setEmail(p => e.target.value)}/>
+                <input type="email" id="email" placeholder="Enter your email..." onChange={(e) => setEmail(p => e.target.value)}/>
 
 
-                <input type="password" id="password" placeholder="Enter password" onChange={(e) => setPassword(p => e.target.value)}/>
+                <input type="password" id="password" placeholder="Enter password..." onChange={(e) => setPassword(p => e.target.value)}/>
 
-                <input type="password" id="repeated_password" placeholder="Repeat your password" onChange={(e) => setRepeatPassword(p => e.target.value)}/>
+                <input type="password" id="repeated_password" placeholder="Repeat your password..." onChange={(e) => setRepeatPassword(p => e.target.value)}/>
 
                 <p>{errorMessage}</p>
 
