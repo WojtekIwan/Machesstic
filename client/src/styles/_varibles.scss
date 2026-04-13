@@ -31,7 +31,9 @@ $paragraphSize: 0.9rem;
 @mixin link_to_page{
     color: $additionalGreen;
     font-family: $textFont;
+    font-size: $paragraphSize;
     text-decoration: none;
+    margin: 2rem;
 }
 
 @mixin h1_to_h3($size){

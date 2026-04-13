@@ -1,6 +1,7 @@
 import { useState } from "react"
 import {Link} from "react-router-dom"
 import axios from "axios"
+import "../../styles/main.scss"
 
 function Login(){
     const [usernameOrEmail, setUsernameOrEmail] = useState("")
@@ -15,6 +16,7 @@ function Login(){
             console.log(res.data)
             if(res.data.code == 200){
                 console.log("Create a JWT token")
+                window.location = "/user"
             }else if(res.data.code == 400){
                 setErrorMessage(p=> res.data.message)
                 console.log(res.data, res.data.message)
@@ -23,7 +25,7 @@ function Login(){
     }
 
     return (
-        <div>
+        <div id="log-in-form">
             {/* Logging in form */}
             <div>
                 <h2>Log into Machesstic</h2>
@@ -32,9 +34,16 @@ function Login(){
 
                 <input type="password" placeholder="Enter your password..." id="password" onChange={(e) => setPassword(p => e.target.value)}/>
 
+                <div id="checkbox-container">
+                    <input type="checkbox" id="stayLoggedIn" />
+                    <label htmlFor="stayLoggedIn">Stayed logged in</label>
+                </div>
+
                 {errorMessage}
 
                 <button onClick={(e) => check_login_data(e)}>Log into your account</button>
+                
+                <Link to={"/user/create_account"} id="toCreateAccount">Don`t have account? Create one here</Link>
             </div>
         </div>
     )
