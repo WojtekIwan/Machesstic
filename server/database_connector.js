@@ -1,3 +1,8 @@
+// ***********************************************************************************
+//                                 DATABASE MODULE
+//      Its responsible for all operation that require connection with database
+// ***********************************************************************************
+
 import mysql from "mysql2"
 import dotenv from "dotenv"
 import bycrpt from "bcrypt"
@@ -25,7 +30,7 @@ class DatabaseConnector{
     async username_in_database(username){
         let correct_username = this.validate_username(username)
         if(!correct_username){
-            return "Username cant contain special characters or spaces!"
+            return "Username can`t contain special characters or spaces!"
         }
         
         // Checking if username is already in database
@@ -40,7 +45,7 @@ class DatabaseConnector{
 
     // Validating username
     validate_username(username){
-        let restricted_signs = " =+ \"\\/?()[]{}|*:;'`~<>" // Forbiden characters
+        let restricted_signs = " =+\"\\/?()[]{}|*:;'`~<>" // Forbiden characters
         for(let i = 0; i < username.length; i++){
             if(restricted_signs.includes(username[i])){
                 return false
@@ -49,16 +54,18 @@ class DatabaseConnector{
         return true
     }
 
+    // Is email already taken
     async email_in_database(email){
         let records = await this.pool.query("select * from user_basic where user_basic.email = ?;", [email])
         if(records[0].length != 0){
             let error = "This email is already in use!"
             console.log(`Database error: ${error}`)
-            return {code: 400, message: error}
+            return error
         }
         return false
     }
 
+    // Adding user to database
     async add_user_to_database(username, email, password){
         let hashed_password = ""
         let error = false
