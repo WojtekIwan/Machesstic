@@ -15,12 +15,18 @@ function Login(){
         axios.post("http://localhost:3000/user/login", {"usernameOrEmail": usernameOrEmail, "password": password}).then((res) => {
             console.log(res.data)
             if(res.data.code == 200){
-                console.log("Create a JWT token")
+                send_request_to_create_jwt_token(res.data.data[0].id)
                 window.location = "/user"
             }else if(res.data.code == 400){
                 setErrorMessage(p=> res.data.message)
                 console.log(res.data, res.data.message)
             }
+        })
+    }
+
+    function send_request_to_create_jwt_token(user_id){
+        axios.post("http://localhost:3000/user/create_jwt", {"user_id": user_id}, {withCredentials: true}).then(res => {
+            console.log(res.status, res.data)
         })
     }
 

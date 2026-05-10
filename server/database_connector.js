@@ -100,6 +100,35 @@ class DatabaseConnector{
         }
         return {code: 400, message: "Wrong password"}
     }
+
+    // **********************************************************************************
+    //                               User section - JWT
+    // **********************************************************************************
+
+    async check_if_jwt_exist(id){
+        let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.user_id = ?;`, [id])
+        return result[0].length == 1
+    }
+
+    async add_token_for_user(user_id, jwt_refresh){     
+        let result = await this.pool.query(`insert into jwt_for_user values (?, ?, ?, ?)`,
+             [crypto.randomUUID(), user_id, jwt_refresh, true])
+        return {code: 200, message: "Refresh token added to database"}
+    }
+
+    // Updating token for user when token exist
+    async update_token_for_user(user_id, jwt_refresh){     
+        let result = await this.pool.query(`update jwt_for_user set jwt_for_user.refresh_token = ? where jwt_for_user.id = ?;`, [jwt_refresh, user_id])
+        return {code: 200, message: "Refresh token updated in database"}
+    }
+
+    async check_refresh_token(jwt_refresh){
+        let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.refresh_token = ?;`, [jwt_refresh])
+        if(result[0].length == 0){
+            return {code: 400, message: "Refresh token not found"}
+        }
+        return {code: 200, "data": result[0][0]}
+    }
 }
 
 export default DatabaseConnector

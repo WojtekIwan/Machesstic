@@ -2,14 +2,16 @@ import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 import user_router from "./routers/user.js"
+import cookieParser from "cookie-parser"
 
 dotenv.config()
 
 // Express server setup
 const app = express()
 app.use(express.json())
-app.use(cors({origin: "http://localhost:5173"}))
+app.use(cors({origin: "http://localhost:5173", credentials: true}))
 app.use(express.urlencoded({extended: true}))
+app.use(cookieParser())
 
 // Database Connector setup
 import DatabaseConnector from "./database_connector.js"
