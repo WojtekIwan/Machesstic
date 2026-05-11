@@ -2,6 +2,7 @@ import { useState } from "react"
 import {Link} from "react-router-dom"
 import axios from "axios"
 import "../../styles/main.scss"
+import logo from "../../assets/logo.png"
 
 function Login(){
     const [usernameOrEmail, setUsernameOrEmail] = useState("")
@@ -34,18 +35,15 @@ function Login(){
         <div id="log-in-form">
             {/* Logging in form */}
             <div>
-                <h2>Log into Machesstic</h2>
+                <img src={logo} alt="Logo for Machesstic" />
+
+                <h2>Log into your account:</h2>
 
                 <input type="text" placeholder="Enter your username or email..." id="usernameOrEmail" onChange={(e) => setUsernameOrEmail(p => e.target.value)}/>
 
                 <input type="password" placeholder="Enter your password..." id="password" onChange={(e) => setPassword(p => e.target.value)}/>
 
-                <div id="checkbox-container">
-                    <input type="checkbox" id="stayLoggedIn" />
-                    <label htmlFor="stayLoggedIn">Stayed logged in</label>
-                </div>
-
-                {errorMessage}
+                <p className="error_paragraph">{errorMessage}</p>
 
                 <button onClick={(e) => check_login_data(e)}>Log into your account</button>
                 

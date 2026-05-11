@@ -4,8 +4,8 @@
 $fontColor: #e6ede6;
 $backgroundColor: #212121;
 $backgroundColorSecondary: #323232;  
-$additionalGreen: #3cff00;
-$additionalCyan: #00e5ff;
+$additionalPink: #FE66C4;
+$additionalPurple: #8B53FF;
 
 $errorRed: #BD3E3E;
 
@@ -28,20 +28,6 @@ $paragraphSize: 0.9rem;
 //                                Mixins 
 // ****************************************************************************
 
-@mixin link_to_page{
-    color: $additionalGreen;
-    font-family: $textFont;
-    font-size: $paragraphSize;
-    text-decoration: none;
-    margin: 2rem;
-}
-
-@mixin h1_to_h3($size){
-    color: #e6ede6;
-    font-family: $headerFont;
-    font-size: $size;
-}
-
 @mixin center_component($width, $height, $direction, $background){
     width: $width;
     height: $height;
@@ -55,6 +41,32 @@ $paragraphSize: 0.9rem;
 
     margin: 0rem;
 }
+
+// Logo for creating account and logging in
+@mixin logo_circle(){
+    width: 8rem;
+    height: 8rem;
+    border-radius: 10rem;
+    position: absolute;
+    background-color: $backgroundColor;
+    bottom: 88%;
+    border: 0.1rem solid $backgroundColorSecondary;
+}
+
+@mixin link_to_page{
+    color: $additionalPink;
+    font-family: $textFont;
+    font-size: $paragraphSize;
+    text-decoration: none;
+    margin: 2rem;
+}
+
+@mixin h1_to_h3($size){
+    color: #e6ede6;
+    font-family: $headerFont;
+    font-size: $size;
+}
+
 
 @mixin button($backgroundColor, $fontColor){
     width: 10rem;
@@ -72,25 +84,20 @@ $paragraphSize: 0.9rem;
     }
 }
 
-@mixin label(){
-    color: $fontColor;
-    font-family: $textFont;
-    margin: 0.3rem;
-}
 
 @mixin input(){
     background-color: $backgroundColor;
     color: $fontColor;
 
-    font-family: $h3Size;
+    font-family: $h2Size;
 
-    padding: 0.2rem;
-    padding-left: 0.5rem;
+    padding: 0.5rem;
+    padding-left: 0.75rem;
 
     border: none;
-    border-radius: 2rem;
+    border-radius: 0.25rem;
     width: 15rem;
-    height: 2rem;
+    height: 2.5rem;
 }
 
 @mixin error_paragraph(){

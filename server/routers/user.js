@@ -47,21 +47,18 @@ user_router.post("/verify_user", async (req, res) => {
     return res.status(200).json({validated: true})
 })
 
-user_router.get("/verify_code/:code", (req, res) => {
+user_router.post("/verify_code/:code", async (req, res) => {
     console.log(req.cookies)
     if(req.cookies.code == null){
         return res.status(400).json({verified: false, error_message: "Your code expire. Try again"})
     }
 
+    // If code is correct then user is added to database and redirected to user page
     if(req.params.code == req.cookies.code){
-        return res.status(200).json({verified: true, message: "Your code is correct. Welcome to machesstic!"})
+        let result = await dc.add_user_to_database(req.body.username, req.body.email, req.body.password)
+        return res.status(result.code).json({verified: true, message: result.message})
     }
     return res.status(400).json({verified: true, error_message: "Wrong code. Try again"})
-})
-
-user_router.post("/create_user", async (req, res) => {
-    let result = await dc.add_user_to_database(req.body.username, req.body.email, req.body.password)
-    return res.send({code: result.code, message: result.message})
 })
 
 user_router.post("/login", async (req, res) => {

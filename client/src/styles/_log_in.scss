@@ -6,45 +6,27 @@
     div{
         @include center_component(30%, 32.5rem, column, $backgroundColorSecondary);
         justify-content: space-around;
-        border-radius: 0.2rem;
+        border-radius: 0.5rem;
         padding-top: 1rem;
-        box-shadow: 0 0 2rem 0rem $additionalCyan;
+        position: relative;
+        
+        img{
+            @include logo_circle();
+        }
 
         h2{
+            padding-top: 2.5rem;
             @include h1_to_h3($h3Size);
         }
 
         input{
             @include input();
-            margin-top: 1.25rem;
-            margin-bottom: 1.25rem; 
+            margin-top: 1rem;
+            margin-bottom: 1rem; 
         }
 
-        p{
+        .error_paragraph{
             @include error_paragraph();
-        }
-
-        #checkbox-container{
-            height: 2rem;
-            width: 50%;
-
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-
-            box-shadow: none;
-            
-            input{
-                width: 1rem;
-                height: 1rem;
-            }
-
-            label{
-                color: $fontColor;
-                font-family: $textFont;
-                font-size: $paragraphSize;
-            }
         }
 
         #toCreateAccount{
@@ -52,7 +34,7 @@
         }
 
         button{
-            @include button($backgroundColor, $fontColor);
+            @include button($additionalPurple, $fontColor);
         }
     }
 }
