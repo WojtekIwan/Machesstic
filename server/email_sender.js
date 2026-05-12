@@ -55,7 +55,7 @@ class EmailSender{
                     line-height: 1.6;
                 }
                 .code{
-                    color: #3cff00;
+                    color: #FE66C4;
                 }
                 .footer {
                     text-align: center;

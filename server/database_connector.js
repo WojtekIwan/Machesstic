@@ -136,6 +136,14 @@ class DatabaseConnector{
         }
         return {code: 200, "data": result[0][0]}
     }
+
+    // **********************************************************************************
+    //                            User section - User page
+    // **********************************************************************************
+    async get_user_data_by_id(user_id){
+        let result = await this.pool.query(`Select * from user_basic where user_basic.id = ?;`, [user_id])
+        return result[0][0]
+    }
 }
 
 export default DatabaseConnector

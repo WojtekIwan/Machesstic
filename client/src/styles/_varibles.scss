@@ -81,6 +81,7 @@ $paragraphSize: 0.9rem;
 
     &:hover{
         cursor: pointer;
+        background-color: $additionalPink;
     }
 }
 
@@ -102,6 +103,12 @@ $paragraphSize: 0.9rem;
 
 @mixin error_paragraph(){
     color: $errorRed;
+    font-family: $textFont;
+    font-size: $paragraphSize;
+}
+
+@mixin paragraph(){
+    color: $fontColor;
     font-family: $textFont;
     font-size: $paragraphSize;
 }

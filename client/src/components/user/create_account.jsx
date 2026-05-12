@@ -57,8 +57,9 @@ function CreateAccount(){
             ? 
             <div id="create-account-form">
                 <div>
+                    <img src={logo} alt="Logo for Machesstic" />
                     <h2>Validate code</h2>
-                    <p>Validation code was send to your email.</p>
+                    <label>Validation code was send to your email.</label>
 
                     <input type="text" id="code" placeholder="Enter your code..." onChange={(e) => setCode(p => e.target.value)}/>
 
