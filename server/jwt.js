@@ -19,7 +19,7 @@ export async function create_tokens(user_id){
     
     let user_data = await dc.get_user_data_by_id(user_id)
     
-    let jwt_refresh = jwt.sign({"id": user_id, "username": user_data.username}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: 1000 * 60 * 24 * 7}) // To chyba oznacza tydzień
+    let jwt_refresh = jwt.sign({"id": user_id, "username": user_data.username}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: 1000 * 60 * 60 * 24 * 7}) // To chyba oznacza tydzień
     let jwt_access = jwt.sign({"id": user_id, "username": user_data.username}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: 1000 * 60 * 15}) // 15 minut i think?
         
     if(!jwt_exist){
@@ -35,29 +35,47 @@ export async function create_tokens(user_id){
 // Validating jwt token
 export async function authenticate_token(req, res, next){
     const user_access_token = req.cookies.accessToken
+    
     if(user_access_token == null){
-        // There is no access token
-        return res.status(400).json({message: "Unexpected error: you dont have authentication token"})
-    }
-
-    jwt.verify(user_access_token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if(err){
-            // The access token is not active - automaticly refresh it
-            console.log("Token has been expired. trying to refresh...")
-            let result = checkRefreshToken(req)
-            if(!result){
-                console.log("Token couldn`t be refreshed.")
-                return res.send({code: 403, message: "Unexpected error: you dont have active authentication token"})
-            }
-            res.cookie("accessToken", result.accessToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire})
-            res.cookie("refreshToken", result.accessToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire})
-            console.log("Token was succesfully refreshed!")
+        console.log("Token not found. trying to refresh...")
+        let result = checkRefreshToken(req)
+        if(!result){
+            console.log("Token couldn`t be refreshed.")
+            return res.status(400).json({message: "Unexpected error: you dont have authentication token"})
         }
-
-        req.user_id = user.id
-        req.username = user.username
+        let time_for_expire_access = new Date(Date.now() + 15 * 60 * 1000)
+        let time_for_expire_refresh = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        res.cookie("accessToken", result.accessToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire_access})
+        res.cookie("refreshToken", result.refreshToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire_refresh})
+        console.log("Token was succesfully refreshed!")
         next()
-    })
+    }else{
+        jwt.verify(user_access_token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
+            if(err){
+                // The access token is not active - automaticly refresh it
+                console.log("Token has been expired. trying to refresh...")
+                let result = await checkRefreshToken(req)
+                if(!result){
+                    console.log("Token couldn`t be refreshed.")
+                    return res.send({code: 403, message: "Unexpected error: you dont have active authentication token"})
+                    // next()
+                }
+                console.log("RESULT: ", result)
+                let time_for_expire_access = new Date(Date.now() + 15 * 60 * 1000)
+                let time_for_expire_refresh = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                res.cookie("accessToken", result.accessToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire_access})
+                res.cookie("refreshToken", result.refreshToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire_refresh})
+                console.log("Token was succesfully refreshed!")
+                next()
+            }else{
+                console.log("*****************************************************************")
+                console.log(user)
+                req.user_id = user.id
+                req.username = user.username
+                next()
+            }
+        })
+    }
 }
 
 // Refreshing access token
@@ -72,6 +90,7 @@ export async function checkRefreshToken(req){
                     return false
                 }
             })
+            console.log("This is user: ", user)
             let new_access_token = jwt.sign({"id": user.id, "username": user.username}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: 1000 * 60 * 15})
             // When new access token is generated the refresh token is also changed
             let new_refresh_token = jwt.sign({"id": user.id, "username": user.username}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: 1000 * 60 * 24 * 7})

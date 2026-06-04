@@ -77,14 +77,13 @@ user_router.post("/create_jwt", async (req, res) => {
     let time_for_expire = new Date(Date.now() + 15 * 60 * 1000)
 
     res.cookie("accessToken", tokens.accessToken, {sameSite: "strict", path: "/", secure: true, httpOnly: true, expires: time_for_expire})
-    res.cookie("refreshToken", tokens.refreshToken, {sameSite: "strict", path: "/refresh", secure: true, httpOnly: true, expires: time_for_expire})
+    res.cookie("refreshToken", tokens.refreshToken, {sameSite: "strict", path: "/", secure: true, httpOnly: true, expires: time_for_expire})
     return res.status(200).json({msg: "Token created!"})
 })
 
 user_router.get("/get_user_data", jwt_connector.authenticate_token, (req, res) => {
     // Verify if jwt is okay
-    console.log("Something")
-    console.log(`User id: ${req.user_id} username: ${req.username}`)
+    console.log(`User data: [user id: ${req.user_id} username: ${req.username}]`)
     // If so return data on the other hand return error
     return res.status(200).json({"user_id": req.user_id, "username": req.username})
 })

@@ -3,16 +3,16 @@
 // ****************************************************************************
 @use "./varibles" as *;
 
-// #error-component{
-//     @include center_component(100%, 100vh, "column", $backgroundColor);
-//     div{
-//         text-align: center;
-//         h2{
-//             @include h1_to_h3($h2Size);
-//         }
+#error-component{
+    @include center_component(100%, 100vh, "column", $backgroundColor);
+    div{
+        text-align: center;
+        h2{
+            @include h1_to_h3($h2Size);
+        }
 
-//         .link{
-//             @include link_to_page();
-//         }
-//     }
-// }
+        .link{
+            @include link_to_page();
+        }
+    }
+}

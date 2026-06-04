@@ -144,6 +144,14 @@ class DatabaseConnector{
         let result = await this.pool.query(`Select * from user_basic where user_basic.id = ?;`, [user_id])
         return result[0][0]
     }
+
+    // **********************************************************************************
+    //                                    Game 
+    // **********************************************************************************
+    async create_game(user_id1, user_id2){
+        let result = await this.pool.query(`insert into chess_game values (?,?,?,"",1,"",0)`, [crypto.randomUUID(), user_id1, user_id2])
+        return {code: 200, message: "Game was created"}
+    }
 }
 
 export default DatabaseConnector
