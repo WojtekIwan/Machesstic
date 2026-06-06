@@ -1,0 +1,19 @@
+.dark_tile{
+    background-color: rgb(103, 56, 32);
+}
+
+.light_tile{
+    background-color: rgb(196, 150, 127);
+}
+
+.chess_tile{
+    width: 4rem;
+    height: 4rem;
+}
+
+#game_board{
+    max-width: 32rem;
+    max-height: 32rem;
+    display: flex;
+    flex-wrap: wrap;
+}

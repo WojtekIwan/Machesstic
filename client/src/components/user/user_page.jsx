@@ -2,11 +2,12 @@ import { useEffect } from "react"
 import axios from "axios"
 import { useState } from "react"
 import io from 'socket.io-client';
+import "../../styles/main.scss"
 
 const socket = io.connect('http://localhost:3000');
 
-socket.on("test", () => {
-    console.log("SOmething happend!")
+socket.on("start_game", (game_id) => {
+    window.location = `/game/${game_id}`
 })
 
 function UserPage(){
@@ -20,6 +21,10 @@ function UserPage(){
 
             socket.emit("join_server", res.data.user_id, res.data.username)
         })
+
+        return () => {
+            socket.disconnect()
+        }
     }, [])
 
     function find_game(e){

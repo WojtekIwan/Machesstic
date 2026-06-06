@@ -41,11 +41,22 @@ app.use("/user", user_router) // Connection to user router
 const players_lobby = []
 const active_players = []
 
+// The connection of socket to server
 io.on("connection", (socket) => {
     socket.on("join_server", (id, username) => {
+        // If socket is not on the list then it is added
         if(active_players.filter(element => element.player_id == id).length == 0){
             active_players.push({"socket": socket, "player_id": id, "username": username})
             console.log("Active players: ", active_players)
+        }
+    })
+
+    socket.on("update_socket", (id) => {
+        for(let i = 0; i < active_players.length; i ++){
+            if(active_players[i].player_id == id){
+                active_players[i].socket = socket
+                console.log("Socket updated for: ", active_players[i].player_name)
+            }
         }
     })
 })
@@ -61,12 +72,14 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
         console.log("Playing players: ", players_lobby)
 
         if(players_lobby.length == 2){
-            await dc.create_game(players_lobby[0].player_id, players_lobby[1].player_id)
-            players_lobby[0].socket.join("room1")
-            players_lobby[1].socket.join("room1")
+            let game = await dc.create_game(players_lobby[0].player_id, players_lobby[1].player_id)
+            players_lobby[0].socket.join(game.game_id)
+            players_lobby[1].socket.join(game.game_id)
 
-            io.to("room1").emit("test")
+            io.to(game.game_id).emit("start_game", game.game_id)
             console.log("We got it - starting new game!")
+            // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz
+            console.log(active_players.length, players_lobby.length)
         }
     }else{
         console.log("Already playing!")

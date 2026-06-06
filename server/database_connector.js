@@ -149,8 +149,11 @@ class DatabaseConnector{
     //                                    Game 
     // **********************************************************************************
     async create_game(user_id1, user_id2){
-        let result = await this.pool.query(`insert into chess_game values (?,?,?,"",1,"",0)`, [crypto.randomUUID(), user_id1, user_id2])
-        return {code: 200, message: "Game was created"}
+        let game_id = crypto.randomUUID()
+
+        // Dodać datę rozpoczęcia, timery 
+        let result = await this.pool.query(`insert into chess_game values (?,?,?,"",1,"",0)`, [game_id, user_id1, user_id2])
+        return {code: 200, game_id: game_id}
     }
 }
 

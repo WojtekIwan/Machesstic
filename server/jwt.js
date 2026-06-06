@@ -54,6 +54,7 @@ export async function authenticate_token(req, res, next){
             if(err){
                 // The access token is not active - automaticly refresh it
                 console.log("Token has been expired. trying to refresh...")
+                console.log("tu je ciastko -> ", req.cookies.refreshToken)
                 let result = await checkRefreshToken(req)
                 if(!result){
                     console.log("Token couldn`t be refreshed.")

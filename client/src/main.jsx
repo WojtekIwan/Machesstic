@@ -6,6 +6,7 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom"
 import Login from './components/user/login.jsx'
 import CreateAccount from './components/user/create_account.jsx'
 import UserPage from './components/user/user_page.jsx'
+import Game from './components/user/game.jsx'
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,11 @@ const router = createBrowserRouter([
   {
     path: "/user/create_account",
     element: <CreateAccount/>,
+    errorElement: <Error/>
+  },
+  {
+    path: "/game/:id",
+    element: <Game/>,
     errorElement: <Error/>
   }
 ])
