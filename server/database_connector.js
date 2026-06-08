@@ -125,7 +125,7 @@ class DatabaseConnector{
 
     // Updating token for user when token exist
     async update_token_for_user(user_id, jwt_refresh){     
-        let result = await this.pool.query(`update jwt_for_user set jwt_for_user.refresh_token = ? where jwt_for_user.id = ?;`, [jwt_refresh, user_id])
+        let result = await this.pool.query(`update jwt_for_user set jwt_for_user.refresh_token = ? where jwt_for_user.user_id = ?;`, [jwt_refresh, user_id])
         return {code: 200, message: "Refresh token updated in database"}
     }
 
