@@ -3,12 +3,16 @@
 }
 
 .light_tile{
-    background-color: rgb(196, 150, 127);
+    background-color: rgb(167, 108, 79);
 }
 
 .chess_tile{
     width: 4rem;
     height: 4rem;
+
+    &:hover{
+        background-color: rgb(201, 186, 172);
+    }
 }
 
 #game_board{
@@ -16,4 +20,11 @@
     max-height: 32rem;
     display: flex;
     flex-wrap: wrap;
+}
+
+.figure{
+    background-color: #fff;
+    border: 0.2rem solid red;
+    height: 4rem;
+    width: 4rem;
 }

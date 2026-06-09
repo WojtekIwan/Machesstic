@@ -74,16 +74,14 @@ user_router.post("/login", async (req, res) => {
 user_router.post("/create_jwt", async (req, res) => {
     let tokens = await jwt_connector.create_tokens(req.body.user_id)
 
-    res.cookie("accessToken", tokens.accessToken, {sameSite: "strict", path: "/", secure: true, httpOnly: true, maxAge: 1000})
-    res.cookie("refreshToken", tokens.refreshToken, {sameSite: "strict", path: "/", secure: true, httpOnly: true, maxAge: 1000 * 60 * 60})
+    res.cookie("accessToken", tokens.accessToken, {sameSite: "strict", path: "/", secure: true, httpOnly: true, maxAge: 1000 * 60 * 15})
+    res.cookie("refreshToken", tokens.refreshToken, {sameSite: "strict", path: "/", secure: true, httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 7})
     return res.status(200).json({msg: "Token created!"})
 })
 
+// Getting basic user data after authentication. IMPORTANT
 user_router.get("/get_user_data", jwt_connector.authenticate_token, (req, res) => {
-    // Verify if jwt is okay
-    console.log(req.cookies, " <- ciastka w getuserdata")
     console.log(`User data: [user id: ${req.user_id} username: ${req.username}]`)
-    // If so return data on the other hand return error
     return res.status(200).json({"user_id": req.user_id, "username": req.username})
 })
 

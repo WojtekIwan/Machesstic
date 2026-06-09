@@ -11,6 +11,7 @@ import crypto from "crypto"
 dotenv.config()
 
 class DatabaseConnector{
+    // Database connector init
     constructor(){
         this.pool = mysql.createPool({
             host: process.env.DATABASE_HOST,
@@ -112,11 +113,13 @@ class DatabaseConnector{
     //                               User section - JWT
     // **********************************************************************************
 
+    // Checking if jwt token exist (checking in jwt_for_user table)
     async check_if_jwt_exist(id){
         let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.user_id = ?;`, [id])
         return result[0].length == 1
     }
 
+    // Adding completly new token to token table
     async add_token_for_user(user_id, jwt_refresh){     
         let result = await this.pool.query(`insert into jwt_for_user values (?, ?, ?, ?)`,
              [crypto.randomUUID(), user_id, jwt_refresh, true])
@@ -129,8 +132,9 @@ class DatabaseConnector{
         return {code: 200, message: "Refresh token updated in database"}
     }
 
-    async check_refresh_token(jwt_refresh){
-        let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.refresh_token = ?;`, [jwt_refresh])
+    // Getting record from jwt_for_user table if refresh token is there
+    async check_refresh_token(refreshToken){
+        let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.refresh_token = ?;`, [refreshToken])
         if(result[0].length == 0){
             return {code: 400, message: "Refresh token not found"}
         }
