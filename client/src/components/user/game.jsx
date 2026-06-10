@@ -14,6 +14,10 @@ function Game(){
     let [visualBoard, setVisualBoard] = useState([])
     let board_length = 8
 
+    let [currentTile, setCurrentTile] = useState(null)
+
+    let [mousedown, setMousedown] = useState(false)
+    
     // Figure section
     let [figure, setFigure] = useState()
 
@@ -26,17 +30,45 @@ function Game(){
         })
 
         generate_board()
-
-
-        setFigure(p => <div className="figure" onMouseDown={(e) => {
-            console.log("Dragging!")
-        }}></div>)
-        
     }, [])
+    
+    useEffect(e => {
+        setFigure(p => <div className="figure" onMouseMove={(e) => {
+            if(mousedown){         
+                console.log(e.clientX, e.clientY)
+                e.target.style.left = `${e.clientX - 32}px`
+                e.target.style.top = `${e.clientY - 32}px`
+            }
+        }}></div>)
+        window.addEventListener("mousedown", md)
+
+        function md(e){
+            setMousedown(p => true)
+            console.log(mousedown)
+        }
+
+        window.addEventListener("mouseup", mp)
+
+        function mp(e){
+            setMousedown(p => false)
+            console.log(mousedown)
+        }
+
+        return () => {
+            window.removeEventListener("mousedown", md)
+            window.removeEventListener("mouseup", mp)
+        }
+    }, [mousedown])
+
+    function change_current_tile(e, tile){
+        setCurrentTile(p => tile)
+    }
 
     function generate_board(){
         for(let i = 0; i < board_length * board_length; i++){
-            setVisualBoard(p => [...p, <div key={i} className={(parseInt(i / 8) + i) % 2 == 0 ? "dark_tile chess_tile" : "light_tile chess_tile"}></div>])
+            let tile = <div key={i} onMouseEnter={(e) => change_current_tile(e, this)} className={(parseInt(i / 8) + i) % 2 == 0 ? "dark_tile chess_tile" : "light_tile chess_tile"}></div>
+            
+            setVisualBoard(p => [...p, tile])
         }
     }
 
