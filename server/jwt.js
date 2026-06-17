@@ -39,6 +39,8 @@ export async function authenticate_token(req, res, next){
     const user_access_token = req.cookies.accessToken // Getting token from http only cookie
     console.log("Authenticating...")
 
+    // ! pierwsze logowanie nie działa, ogarnij to !
+
     // If access token is not found then try to generate new one
     if(user_access_token == null){
         let result = await checkRefreshToken(req)
@@ -56,7 +58,6 @@ export async function authenticate_token(req, res, next){
         
         req.user_id = result.user_id
         req.username = result.username
-
         next()
     }else{
         jwt.verify(user_access_token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
@@ -94,7 +95,6 @@ export async function authenticate_token(req, res, next){
 export async function checkRefreshToken(req){
     const user_refresh_token = req.cookies.refreshToken
     let result = await dc.check_refresh_token(user_refresh_token)
-
     let data = {}
     if(result.code == 200){
         if(result.data.verified){

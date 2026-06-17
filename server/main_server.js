@@ -69,7 +69,7 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
         let player = active_players.filter(element => element.player_id == req.user_id)[0]
         players_lobby.push({"socket": player.socket, "player_id": player.player_id, "username": player.username})
 
-        console.log("Playing players: ", players_lobby)
+        console.log("Playing players: ", active_players)
 
         if(players_lobby.length == 2){
             let game = await dc.create_game(players_lobby[0].player_id, players_lobby[1].player_id)
