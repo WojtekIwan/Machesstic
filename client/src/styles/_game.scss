@@ -1,3 +1,5 @@
+@use "./varibles" as *;
+
 .dark_tile{
     background-color: rgb(103, 56, 32);
 }
@@ -15,14 +17,7 @@
     }
 }
 
-#game_board{
-    max-width: 32rem;
-    max-height: 32rem;
-    border-collapse: collapse;
-    border-spacing: 0;
-    // display: flex;
-    // flex-wrap: wrap;
-}
+
 
 td{
     padding: 0rem !important;
@@ -33,5 +28,34 @@ td{
     border: 0.1rem solid red;
     height: 3.8rem;
     width: 3.8rem;
-    position: absolute;
+    position: fixed;
+    touch-action: none;
+}
+
+#main_container{
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background-color: $backgroundColorSecondary;
+
+    h1{
+        @include h1_to_h3($h3Size)
+    }
+
+    #game_board{
+        max-width: 32rem;
+        max-height: 32rem;
+        border-collapse: collapse;
+        border-spacing: 0;
+
+        tr > td{
+            padding: 0rem !important;
+        }
+    }
 }

@@ -45,3 +45,14 @@ Fancy border
 		border-radius: 0.2rem;
     }
 }
+
+Dragging figure (not working but migt useful)
+if(droppedRef.current){
+  	console.log(tile)
+ 	currentFigure.update_pos(tile.new_x, tile.new_y)
+ 	currentFigure.figure.style.left = `${tile.tile.getBoundingClientRect().left}px`
+	currentFigure.figure.style.top = `${tile.tile.getBoundingClientRect().top}px`
+  	currentFigure.figure.style.pointerEvents = "all"
+  	setDropped(p => false)
+ 	droppedRef.current = false
+}

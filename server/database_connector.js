@@ -35,7 +35,7 @@ class DatabaseConnector{
         }
         
         // Checking if username is already in database
-        let records = await this.pool.query("select * from user_basic where user_basic.username = ?;", [username])
+        let records = await this.pool.query("select * from user_basic_info where user_basic_info.username = ?;", [username])
         if(records[0].length != 0){
             let error = "This username is already taken!"
             console.log(`Database error: ${error}`)
@@ -57,7 +57,7 @@ class DatabaseConnector{
 
     // Is email already taken
     async email_in_database(email){
-        let records = await this.pool.query("select * from user_basic where user_basic.email = ?;", [email])
+        let records = await this.pool.query("select * from user_basic_info where user_basic_info.email = ?;", [email])
         if(records[0].length != 0){
             let error = "This email is already in use!"
             console.log(`Database error: ${error}`)
@@ -82,7 +82,7 @@ class DatabaseConnector{
                 let account_creation_data = data.getFullYear() + "-" + (data.getMonth() + 1) + "-" + data.getDate()
 
                 try{
-                    await this.pool.query("insert into user_basic values (?, ?, ?, ?, ?)", 
+                    await this.pool.query("insert into user_basic_info values (?, ?, ?, ?, ?)", 
                         [crypto.randomUUID(), username, email, hashed_password, account_creation_data])
                 }catch(e){
                     error = true
@@ -95,7 +95,7 @@ class DatabaseConnector{
 
     // Checking if user creadtentials are correct
     async log_user_in(usernameOrEmail, password){
-        let result = await this.pool.query(`Select * from user_basic where 
+        let result = await this.pool.query(`Select * from user_basic_info where 
             ${usernameOrEmail.includes("@") ? 'email' : 'username'} = ?;`, [usernameOrEmail])
         
         if(result[0].length == 0){
@@ -113,28 +113,28 @@ class DatabaseConnector{
     //                               User section - JWT
     // **********************************************************************************
 
-    // Checking if jwt token exist (checking in jwt_for_user table)
+    // Checking if jwt token exist (checking in jwt_for_users table)
     async check_if_jwt_exist(id){
-        let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.user_id = ?;`, [id])
+        let result = await this.pool.query(`Select * from jwt_for_users where jwt_for_users.user_id = ?;`, [id])
         return result[0].length == 1
     }
 
     // Adding completly new token to token table
     async add_token_for_user(user_id, jwt_refresh){     
-        let result = await this.pool.query(`insert into jwt_for_user values (?, ?, ?, ?)`,
+        let result = await this.pool.query(`insert into jwt_for_users values (?, ?, ?, ?)`,
              [crypto.randomUUID(), user_id, jwt_refresh, true])
         return {code: 200, message: "Refresh token added to database"}
     }
 
     // Updating token for user when token exist
     async update_token_for_user(user_id, jwt_refresh){     
-        let result = await this.pool.query(`update jwt_for_user set jwt_for_user.refresh_token = ? where jwt_for_user.user_id = ?;`, [jwt_refresh, user_id])
+        let result = await this.pool.query(`update jwt_for_users set jwt_for_users.refresh_token = ? where jwt_for_users.user_id = ?;`, [jwt_refresh, user_id])
         return {code: 200, message: "Refresh token updated in database"}
     }
 
-    // Getting record from jwt_for_user table if refresh token is there
+    // Getting record from jwt_for_users table if refresh token is there
     async check_refresh_token(refreshToken){
-        let result = await this.pool.query(`Select * from jwt_for_user where jwt_for_user.refresh_token = ?;`, [refreshToken])
+        let result = await this.pool.query(`Select * from jwt_for_users where jwt_for_users.refresh_token = ?;`, [refreshToken])
         if(result[0].length == 0){
             return {code: 400, message: "Refresh token not found"}
         }
@@ -145,7 +145,7 @@ class DatabaseConnector{
     //                            User section - User page
     // **********************************************************************************
     async get_user_data_by_id(user_id){
-        let result = await this.pool.query(`Select * from user_basic where user_basic.id = ?;`, [user_id])
+        let result = await this.pool.query(`Select * from user_basic_info where user_basic_info.id = ?;`, [user_id])
         return result[0][0]
     }
 
@@ -156,7 +156,7 @@ class DatabaseConnector{
         let game_id = crypto.randomUUID()
 
         // Dodać datę rozpoczęcia, timery 
-        let result = await this.pool.query(`insert into chess_game values (?,?,?,"",1,"",0)`, [game_id, user_id1, user_id2])
+        let result = await this.pool.query(`insert into chess_games values (?,?,?,"",1,"",0)`, [game_id, user_id1, user_id2])
         return {code: 200, game_id: game_id}
     }
 }

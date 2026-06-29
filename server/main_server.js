@@ -51,9 +51,14 @@ io.on("connection", (socket) => {
         }
     })
 
+    socket.on("get_game_data", () => {
+        socket.emit("board_data")
+    })
+
     socket.on("update_socket", (id) => {
         for(let i = 0; i < active_players.length; i ++){
             if(active_players[i].player_id == id){
+                console.log(active_players[i])
                 active_players[i].socket = socket
                 console.log("Socket updated for: ", active_players[i].player_name)
             }
