@@ -24,6 +24,7 @@ const io = await new Server(server, {cors: {origin: "http://localhost:5173",meth
 
 // Database Connector setup
 import DatabaseConnector from "./database_connector.js"
+import { ChessGame } from "./chess_game.js"
 
 const dc = new DatabaseConnector()
 
@@ -38,57 +39,71 @@ app.use("/user", user_router) // Connection to user router
 //      Its responsible for connecting to game and playing chess matches
 // ***********************************************************************************
 
-const players_lobby = []
-const active_players = []
+const players_lobby = new Map()
+const active_players = new Map()
+
 
 // The connection of socket to server
 io.on("connection", (socket) => {
     socket.on("join_server", (id, username) => {
         // If socket is not on the list then it is added
-        if(active_players.filter(element => element.player_id == id).length == 0){
-            active_players.push({"socket": socket, "player_id": id, "username": username})
-            console.log("Active players: ", active_players)
+        if(!active_players.has(id)){
+            active_players.set(id, {"username": username, "socket": socket, "playing": true})
+            console.log(active_players.size, " <- size of active players")
         }
     })
 
-    socket.on("get_game_data", () => {
-        socket.emit("board_data")
-    })
-
-    socket.on("update_socket", (id) => {
-        for(let i = 0; i < active_players.length; i ++){
-            if(active_players[i].player_id == id){
-                console.log(active_players[i])
-                active_players[i].socket = socket
-                console.log("Socket updated for: ", active_players[i].player_name)
-            }
-        }
+    socket.on("update_socket", (id, username) => {
+        // Update socket at given id
+        console.log("SOCKET UPDATE ")
+        active_players.set(id, {"username": username, "socket": socket, "playing": true})
+        players_lobby.set(id, {"username": username, "socket": socket, "playing": true})
     })
 })
 
+io.of("/").adapter.on("create-room", async (room) => {
+    let game_in_database = await dc.get_game(room)
+    if(game_in_database){
+        const game = new ChessGame()
+        console.log(`A new room was created: ${room}`);
+
+        let user1 = active_players.get(game_in_database.user1)
+        let user2 = active_players.get(game_in_database.user2)
+
+        active_players.get(game_in_database.user1).socket.on("nigga", () => {
+            console.log("We got it buddy!")
+        })
+        user1.socket.emit("board-data", game.board, "black")
+        user2.socket.emit("board-data", game.board, "white")
+    }
+    // Do something here (e.g., update an active rooms list in a database)
+});
+
 app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
     console.log(`${req.username} wants to play!`)
-    let user_already_wants_to_play = players_lobby.filter(element => element.player_id == req.user_id)
 
-    if(user_already_wants_to_play.length == 0){
-        let player = active_players.filter(element => element.player_id == req.user_id)[0]
-        players_lobby.push({"socket": player.socket, "player_id": player.player_id, "username": player.username})
+    if(!players_lobby.has(req.user_id)){
+        players_lobby.set(req.user_id, active_players.get(req.user_id))
 
-        console.log("Playing players: ", active_players)
+        if(players_lobby.size == 2){
+            // Tu logika dobierania graczy do solidnej poprawy - dobieranie po elo plus nie pętlą raczej
+            let players = []
+            for (const [key, value] of players_lobby.entries()) {
+                console.log(key, value);
+                players.push({"player_id": key, "socket": value.socket})
+            }
 
-        if(players_lobby.length == 2){
-            let game = await dc.create_game(players_lobby[0].player_id, players_lobby[1].player_id)
-            players_lobby[0].socket.join(game.game_id)
-            players_lobby[1].socket.join(game.game_id)
+            let game = await dc.create_game(players[0].player_id, players[1].player_id)
+            players[0].socket.join(game.game_id)
+            players[1].socket.join(game.game_id)
 
             io.to(game.game_id).emit("start_game", game.game_id)
             console.log("We got it - starting new game!")
             // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz
-            console.log(active_players.length, players_lobby.length)
+            // console.log(active_players.length, players_lobby.length)
         }
-    }else{
-        console.log("Already playing!")
     }
+
     return res.status(200)
 })
 

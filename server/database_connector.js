@@ -156,8 +156,16 @@ class DatabaseConnector{
         let game_id = crypto.randomUUID()
 
         // Dodać datę rozpoczęcia, timery 
-        let result = await this.pool.query(`insert into chess_games values (?,?,?,"",1,"",0)`, [game_id, user_id1, user_id2])
+        let result = await this.pool.query(`insert into chess_games values (?,?,?,"",?,"",0)`, [game_id, user_id1, user_id2, Math.floor(Math.random() * 2)])
         return {code: 200, game_id: game_id}
+    }
+
+    async get_game(game_id){
+        let result = await this.pool.query(`Select * from chess_games where chess_games.id = ?;`, [game_id])
+        if(result[0].length != 1){
+            return false
+        }
+        return result[0][0]
     }
 }
 

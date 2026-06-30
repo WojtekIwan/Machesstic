@@ -39,18 +39,15 @@ function Game(){
             setUsername(p => res.data.username)
             setId(p => res.data.user_id)
 
-            socket.emit("update_socket", res.data.user_id)
+            socket.emit("update_socket", res.data.user_id, res.data.username)
 
-            socket.emit("get_game_data")
-            // socket.on("board_data", (board_data) => {
-            //     console.log("Board data: ", board_data)
-            // })
+            socket.emit("nigga")
         })
     }, [])
 
     useEffect(() => {
-        socket.on("board_data", () => {
-            console.log("Board data: ")
+        socket.on("board-data", (board, color) => {
+            console.log("Board data: ", board, color)
         })
     }, [socket])
 
