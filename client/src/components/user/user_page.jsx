@@ -1,16 +1,19 @@
-import { useEffect } from "react"
+import { useEffect, useContext } from "react"
 import axios from "axios"
 import { useState } from "react"
 import io from 'socket.io-client';
 import "../../styles/main.scss"
 
-const socket = io.connect('http://localhost:3000');
+import { socketContext } from "../../main";
 
-socket.on("start_game", (game_id) => {
-    window.location = `/game/${game_id}`
-})
 
 function UserPage(){
+    const socket = useContext(socketContext)
+    
+    socket.on("start_game", (game_id) => {
+        window.location = `/game/${game_id}`
+    })
+    
     const [username, setUsername] = useState("")
     const [id, setId] = useState("")
 
@@ -21,10 +24,6 @@ function UserPage(){
 
             socket.emit("join_server", res.data.user_id, res.data.username)
         })
-
-        return () => {
-            socket.disconnect()
-        }
     }, [])
 
     function find_game(e){
@@ -34,7 +33,7 @@ function UserPage(){
         })
     }
 
-    return (
+    return (   
         <div>
             <p>Welcome to our site {username}!</p>
             <button onClick={(e) => find_game(e)}>Find game</button>

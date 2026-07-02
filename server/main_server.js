@@ -42,22 +42,22 @@ app.use("/user", user_router) // Connection to user router
 const players_lobby = new Map()
 const active_players = new Map()
 
+const current_games = new Map()
 
 // The connection of socket to server
 io.on("connection", (socket) => {
     socket.on("join_server", (id, username) => {
         // If socket is not on the list then it is added
         if(!active_players.has(id)){
-            active_players.set(id, {"username": username, "socket": socket, "playing": true})
+            active_players.set(id, {"username": username, "socket": socket, "game_id": null, "color": null})
             console.log(active_players.size, " <- size of active players")
         }
     })
 
-    socket.on("update_socket", (id, username) => {
-        // Update socket at given id
-        console.log("SOCKET UPDATE ")
-        active_players.set(id, {"username": username, "socket": socket, "playing": true})
-        players_lobby.set(id, {"username": username, "socket": socket, "playing": true})
+    socket.on("get_game_data", (id) => {
+        console.log("something important")
+        console.log(active_players, id, active_players.get(id))
+        socket.emit("board_data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).game)
     })
 })
 
@@ -67,14 +67,20 @@ io.of("/").adapter.on("create-room", async (room) => {
         const game = new ChessGame()
         console.log(`A new room was created: ${room}`);
 
+        current_games.set(room, {"game": game})
+
         let user1 = active_players.get(game_in_database.user1)
         let user2 = active_players.get(game_in_database.user2)
+        
+        let color = Math.floor(Math.random() * 2)
 
-        active_players.get(game_in_database.user1).socket.on("nigga", () => {
-            console.log("We got it buddy!")
-        })
-        user1.socket.emit("board-data", game.board, "black")
-        user2.socket.emit("board-data", game.board, "white")
+        user1.game_id = room
+        user1.color = color ? "white" : "black"
+
+        user2.game_id = room
+        user2.color = color ? "black" : "white"
+
+        console.log(active_players)
     }
     // Do something here (e.g., update an active rooms list in a database)
 });
@@ -89,7 +95,6 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
             // Tu logika dobierania graczy do solidnej poprawy - dobieranie po elo plus nie pętlą raczej
             let players = []
             for (const [key, value] of players_lobby.entries()) {
-                console.log(key, value);
                 players.push({"player_id": key, "socket": value.socket})
             }
 
@@ -100,7 +105,6 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
             io.to(game.game_id).emit("start_game", game.game_id)
             console.log("We got it - starting new game!")
             // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz
-            // console.log(active_players.length, players_lobby.length)
         }
     }
 

@@ -7,6 +7,12 @@ import Login from './components/user/login.jsx'
 import CreateAccount from './components/user/create_account.jsx'
 import UserPage from './components/user/user_page.jsx'
 import Game from './components/user/game.jsx'
+import { createContext } from 'react'
+import io from 'socket.io-client';
+
+const socket = io.connect('http://localhost:3000');
+
+export const socketContext = createContext()
 
 const router = createBrowserRouter([
   {
@@ -36,6 +42,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
+  <socketContext.Provider value={socket}>
     <RouterProvider router={router}/>
+  </socketContext.Provider>
   // </StrictMode>,
 )

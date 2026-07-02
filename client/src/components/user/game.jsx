@@ -1,17 +1,20 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useContext } from "react"
 import axios from "axios"
 import { useState } from "react"
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
 import "../../styles/main.scss"
 
 import Figure from "./figure";
 import Tile from "./tile";
 
-const socket = io.connect('http://localhost:3000');
+import { socketContext } from "../../main";
+
 
 function Game(){
     const [username, setUsername] = useState("")
     const [id, setId] = useState("")
+    
+    const socket = useContext(socketContext)
 
     // Board section
     let board_length = 8
@@ -38,17 +41,22 @@ function Game(){
         axios.get("http://localhost:3000/user/get_user_data", {withCredentials: true}).then(res => {
             setUsername(p => res.data.username)
             setId(p => res.data.user_id)
-
-            socket.emit("update_socket", res.data.user_id, res.data.username)
-
-            socket.emit("nigga")
+            console.log(socket)
+            socket.emit("get_game_data", res.data.user_id)
         })
+
     }, [])
 
     useEffect(() => {
-        socket.on("board-data", (board, color) => {
+        socket.on("board_data", a)
+
+        function a (board, color){
             console.log("Board data: ", board, color)
-        })
+        }
+
+        return () => {
+            socket.off("board-data", a)
+        }
     }, [socket])
 
     function change_current_tile(new_x, new_y, tile){
