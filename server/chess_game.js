@@ -8,7 +8,13 @@ export class ChessGame{
         for(let i = 0; i < this.board_length; i++){
             this.board.push([])
             for(let j = 0; j < this.board_length; j++){
-                this.board[i].push(pom.charAt(i * this.board_length + j))
+                let f = pom.charAt(i * this.board_length + j)
+                if(f != "."){
+                    let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black"}
+                    this.board[i].push(figure)
+                }else{
+                    this.board[i].push({name: f})
+                }
             }
         }
 

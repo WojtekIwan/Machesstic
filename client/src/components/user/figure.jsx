@@ -11,6 +11,7 @@ function Figure(props){
     
     useEffect(() => {
         go_back()
+        figureRef.current.style.backgroundColor = props.color
     }, [])
 
     useEffect(() => {
@@ -24,7 +25,6 @@ function Figure(props){
 
     function drag_figure(e){
         if(drag){        
-            // console.log(e.clientX, props.table.current.getBoundingClientRect().top) 
             let box = props.table.current.getBoundingClientRect()
 
             let x_drag = Math.min(Math.max(e.clientX, box.left), box.left + box.width) - 32
@@ -64,7 +64,7 @@ function Figure(props){
     }
 
     return (
-        <div className='figure' onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}></div>
+        <div className='figure' onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}>{props.type}</div>
     )
 }
 

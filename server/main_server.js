@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
     socket.on("get_game_data", (id) => {
         console.log("something important")
         console.log(active_players, id, active_players.get(id))
-        socket.emit("board_data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).game)
+        socket.emit("board_data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).game.board)
     })
 })
 

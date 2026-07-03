@@ -24,12 +24,16 @@ td{
 }
 
 .figure{
-    background-color: #fff;
-    border: 0.1rem solid red;
+    border: 0.1rem solid rgb(153, 0, 255);
+    color: rgb(153, 0, 255);
     height: 3.8rem;
     width: 3.8rem;
     position: fixed;
     touch-action: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #main_container{

@@ -36,6 +36,9 @@ function Game(){
     let [currentFigure, setCurrentFigure] = useState(null)
 
     const backRef = useRef(null)
+
+    const [board, setBoard] = useState(null)
+    const [color, setColor] = useState("")
     
     useEffect(() => {
         axios.get("http://localhost:3000/user/get_user_data", {withCredentials: true}).then(res => {
@@ -50,8 +53,10 @@ function Game(){
     useEffect(() => {
         socket.on("board_data", a)
 
-        function a (board, color){
+        function a (color, board){
             console.log("Board data: ", board, color)
+            setBoard(p => board)
+            setColor(p => color)
         }
 
         return () => {
@@ -120,7 +125,18 @@ function Game(){
                     }</tr>})}
                 </tbody>
             </table>
-            <Figure x={7} y={7} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} />
+
+            {/* Generating figures for board */}
+            { board != null ? 
+            board?.map((row, x) => {
+                return <div key={x}>{row?.map((element, y) => {
+                    if(element.name != "."){
+                        let x2 = color == "black" ? 7 - x : x
+                        return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} />
+                    }
+                })}
+                </div>
+            }) : <div></div>}  
         </div>
     )
 }
