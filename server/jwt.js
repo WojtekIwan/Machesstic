@@ -37,15 +37,13 @@ export async function create_tokens(user_id){
 // Validating jwt token
 export async function authenticate_token(req, res, next){
     const user_access_token = req.cookies.accessToken // Getting token from http only cookie
-    console.log("Authenticating...")
-
-    // ! pierwsze logowanie nie działa, ogarnij to !
+    console.log("Authenticating...", req.cookies)
 
     // If access token is not found then try to generate new one
     if(user_access_token == null){
         let result = await checkRefreshToken(req)
         if(!result){
-            return res.status(400).json({message: "Unexpected error: you dont have authentication token"})
+            return res.status(403).json({message: "Unexpected error: you dont have authentication token"})
         }
 
         // Setting times for cookies
@@ -68,7 +66,6 @@ export async function authenticate_token(req, res, next){
                     console.log("Token couldn`t be refreshed.")
                     return res.send({code: 403, message: "Unexpected error: you dont have active authentication token"})
                 }
-
                 // Setting times for cookies
                 let time_for_expire_access = new Date(Date.now() + 15 * 60 * 1000)
                 let time_for_expire_refresh = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -76,7 +73,7 @@ export async function authenticate_token(req, res, next){
                 // Acctually creating cookies
                 res.cookie("accessToken", result.accessToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire_access})
                 res.cookie("refreshToken", result.refreshToken, {sameSite: "strict", secure: true, httpOnly: true, expires: time_for_expire_refresh})
-           
+
                 req.user_id = result.user_id
                 req.username = result.username
 
@@ -96,6 +93,7 @@ export async function checkRefreshToken(req){
     const user_refresh_token = req.cookies.refreshToken
     let result = await dc.check_refresh_token(user_refresh_token)
     let data = {}
+    console.log(result.code, req.cookies)
     if(result.code == 200){
         if(result.data.verified){
             await jwt.verify(user_refresh_token, process.env.REFRESH_TOKEN_SECRET, async (err, user) => {
@@ -106,11 +104,14 @@ export async function checkRefreshToken(req){
                     // When new access token is generated the refresh token is also changed
                     let new_refresh_token = jwt.sign({"id": user.id, "username": user.username}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
                     await dc.update_token_for_user(user.id, new_refresh_token) // Updating new token for users
-        
+                    
                     data = {"accessToken": new_access_token, "refreshToken": new_refresh_token, "user_id": user.id, "username": user.username}
                 }
             })
         }
+    }else{
+        console.log("Token is undefined")
+        data = null
     }
 
     return data

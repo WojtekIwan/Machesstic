@@ -46,44 +46,78 @@ const current_games = new Map()
 
 // The connection of socket to server
 io.on("connection", (socket) => {
-    socket.on("join_server", (id, username) => {
+    socket.on("join-server", (id, username) => {
         // If socket is not on the list then it is added
         if(!active_players.has(id)){
             active_players.set(id, {"username": username, "socket": socket, "game_id": null, "color": null})
-            console.log(active_players.size, " <- size of active players")
         }
     })
 
-    socket.on("get_game_data", (id) => {
-        console.log("something important")
-        console.log(active_players, id, active_players.get(id))
-        socket.emit("board_data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).game.board)
+    socket.on("get-game-data", (id) => {
+        console.log("Getting user data")
+        socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board)
+    })
+
+    socket.on("make-move", async (id, x, y, old) => {
+        let player = active_players.get(id)
+        let game = current_games.get(player.game_id).chessboard
+        let color = id == current_games.get(player.game_id).white ? "white" : "black"
+        
+        console.log(`Player: ${player.username} is making a move!`)
+
+        let can_move = game.move_figure(color, x, y, old.x, old.y)
+
+        socket.emit("make-move", can_move, x, y)
+        io.to(player.game_id).emit("update-board")
+        
+        console.log("*****************************************************")
+    })
+
+    // Socket joins new game as soon as they got redirected to game
+    socket.on("join-game", async (id, user_id, callback) => {
+        let game_in_database = await dc.get_game(id)
+        if(game_in_database && current_games.has(id)){
+            console.log("Joining game!")
+            // If game exist join it
+            let user = active_players.get(user_id)
+            let current_game = current_games.get(id)
+            
+            // Assining color to player
+            if(current_game.white == null && current_game.black == null){
+                let color = Math.floor(Math.random() * 2)
+                if(color){
+                    current_game.white = user_id
+                    user.color = "white"
+                }else{
+                    current_game.black = user_id
+                    user.color = "black"
+                }
+            }else{
+                if(current_game.white != null){
+                    current_game.black = user_id
+                    user.color = "black"
+                }else{
+                    current_game.white = user_id
+                    user.color = "white"
+                }
+            }
+
+            user.game_id = id
+            user.socket.join(id)
+            callback()
+        }
+    })
+
+    socket.on("possible-moves", async (x, y, id, user_id) => {
+        let game_in_database = await dc.get_game(id)
+        console.log("Checking possible moves...", game_in_database, current_games.has(id), id, current_games)
+        if(game_in_database && current_games.has(id)){
+            let game = current_games.get(id)
+            let player = players_lobby.get(user_id)
+            game.chessboard.get_possible_moves(x, y, player.color)
+        }
     })
 })
-
-io.of("/").adapter.on("create-room", async (room) => {
-    let game_in_database = await dc.get_game(room)
-    if(game_in_database){
-        const game = new ChessGame()
-        console.log(`A new room was created: ${room}`);
-
-        current_games.set(room, {"game": game})
-
-        let user1 = active_players.get(game_in_database.user1)
-        let user2 = active_players.get(game_in_database.user2)
-        
-        let color = Math.floor(Math.random() * 2)
-
-        user1.game_id = room
-        user1.color = color ? "white" : "black"
-
-        user2.game_id = room
-        user2.color = color ? "black" : "white"
-
-        console.log(active_players)
-    }
-    // Do something here (e.g., update an active rooms list in a database)
-});
 
 app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
     console.log(`${req.username} wants to play!`)
@@ -99,10 +133,13 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
             }
 
             let game = await dc.create_game(players[0].player_id, players[1].player_id)
-            players[0].socket.join(game.game_id)
-            players[1].socket.join(game.game_id)
+            
+            players[0].socket.emit("start-game", game.game_id)
+            players[1].socket.emit("start-game", game.game_id)
 
-            io.to(game.game_id).emit("start_game", game.game_id)
+            const chessboard = new ChessGame()
+            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null})
+
             console.log("We got it - starting new game!")
             // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz
         }

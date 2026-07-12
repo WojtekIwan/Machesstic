@@ -1,18 +1,19 @@
 import { useEffect, useRef, useContext } from "react"
 import axios from "axios"
 import { useState } from "react"
-// import io from 'socket.io-client';
 import "../../styles/main.scss"
 
 import Figure from "./figure";
 import Tile from "./tile";
 
 import { socketContext } from "../../main";
+import { useParams } from "react-router-dom";
 
 
 function Game(){
     const [username, setUsername] = useState("")
     const [id, setId] = useState("")
+    const idRef = useRef(null)
     
     const socket = useContext(socketContext)
 
@@ -23,7 +24,7 @@ function Game(){
         for(let i = 0; i < board_length; i++){
             tab.push([])
             for(let j = 0; j < board_length; j++){
-                tab[i].push({x: i, y: j})
+                tab[i].push({x: i, y: j, possible_move: false})
             }
         }
         return tab
@@ -40,27 +41,58 @@ function Game(){
     const [board, setBoard] = useState(null)
     const [color, setColor] = useState("")
     
+    let params = useParams()
     useEffect(() => {
         axios.get("http://localhost:3000/user/get_user_data", {withCredentials: true}).then(res => {
+            // Setting username and id
             setUsername(p => res.data.username)
             setId(p => res.data.user_id)
-            console.log(socket)
-            socket.emit("get_game_data", res.data.user_id)
+            idRef.current = res.data.user_id
+            
+            // Joining game
+            socket.emit("join-game", params.id, res.data.user_id, (response) => {
+                socket.emit("get-game-data", res.data.user_id)
+            })
         })
-
     }, [])
 
-    useEffect(() => {
-        socket.on("board_data", a)
+    const currentFigureRef = useRef(currentFigure);
 
-        function a (color, board){
+    useEffect(() => {
+        currentFigureRef.current = currentFigure;
+    }, [currentFigure]);
+
+    useEffect(() => {
+        function update_board(){
+            socket.emit("get-game-data", idRef.current)
+        }
+        
+        function get_board_data(color, board){
             console.log("Board data: ", board, color)
             setBoard(p => board)
             setColor(p => color)
         }
+        
+        function make_move(can_move, new_x, new_y){
+            currentFigureRef.current.figure.style.pointerEvents = "all"
+            // tu coś podmienić bo stawia się na polu do przodu (zamiast 3 4 jest 3 3)
+            if(can_move){
+                currentFigureRef.current.update_pos(new_x, new_y)
+            }else{
+                currentFigureRef.current.go_back()
+            }
+            setDropped(p => false)
+            setCurrentFigure(p => null)
+        }
+        
+        socket.on("make-move", make_move)
+        socket.on("board-data", get_board_data)
+        socket.on("update-board", update_board)
 
         return () => {
-            socket.off("board-data", a)
+            socket.off("make-move", make_move)
+            socket.off("board-data", get_board_data)
+            socket.off("update-board", update_board)
         }
     }, [socket])
 
@@ -68,11 +100,14 @@ function Game(){
         currentTileRef.current = {"x": new_x, "y": new_y, "tile": tile}
         // After updating tile check if figure was dropped. Then drop it
         if(dropped && currentFigure != null){
-            currentFigure.figure.style.pointerEvents = "all"
-            currentFigure.update_pos(new_x, new_y)
-            setDropped(p => false)
-            setCurrentFigure(p => null)
+            console.log(new_x, new_y, " <- there are new positions for figure")
+            socket.emit("make-move", id, color == "black" ? 7 - new_x : new_x, new_y, currentFigure.old_pos)
         }
+    }
+
+    function start_dragging(x, y){
+        console.log("start dragging <- in game")
+        socket.emit("possible-moves", x, y, params.id, idRef.current)
     }
 
     function figure_drop(){
@@ -132,7 +167,7 @@ function Game(){
                 return <div key={x}>{row?.map((element, y) => {
                     if(element.name != "."){
                         let x2 = color == "black" ? 7 - x : x
-                        return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} />
+                        return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
                     }
                 })}
                 </div>

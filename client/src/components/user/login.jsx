@@ -1,5 +1,5 @@
 import { useState } from "react"
-import {Link} from "react-router-dom"
+import {Link, useNavigate} from "react-router-dom"
 import axios from "axios"
 import "../../styles/main.scss"
 import logo from "../../assets/logo.png"
@@ -10,6 +10,8 @@ function Login(){
 
     const [errorMessage, setErrorMessage] = useState("")
 
+    const navigate = useNavigate()
+
     function check_login_data(e){
         e.preventDefault()
         console.log(`Email or username: ${usernameOrEmail} Password: ${password}`)
@@ -17,7 +19,8 @@ function Login(){
             console.log(res.data)
             if(res.data.code == 200){
                 send_request_to_create_jwt_token(res.data.data[0].id)
-                window.location = "/user"
+                navigate("/user")
+
             }else if(res.data.code == 400){
                 setErrorMessage(p=> res.data.message)
                 console.log(res.data, res.data.message)
