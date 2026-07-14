@@ -5,7 +5,9 @@ function Tile(props){
     const y = props.y
 
     return (
-        <div key={x + "-" + y} onMouseEnter={(e) => {props.set_current(x, y, e.target)}} className={(x + y) % 2 == 0 ? "dark_tile chess_tile" : "light_tile chess_tile"}></div>
+        <div key={x + "-" + y} onMouseEnter={(e) => {props.set_current(x, y, e.target)}} className={(x + y) % 2 == 0 ? "dark_tile chess_tile" : "light_tile chess_tile"}>
+            {props.possible_move ? <div className="possible_move"></div> : <></>}
+        </div>
     )
 }
 

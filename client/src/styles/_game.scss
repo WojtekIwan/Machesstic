@@ -11,6 +11,9 @@
 .chess_tile{
     width: 4rem;
     height: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     &:hover{
         background-color: rgb(201, 186, 172);
@@ -62,4 +65,11 @@ td{
             padding: 0rem !important;
         }
     }
+}
+
+.possible_move{
+    width: 1rem;
+    height: 1rem;
+    background: $additionalPurple;
+    border-radius: 2rem;
 }

@@ -75,7 +75,7 @@ function Game(){
         
         function make_move(can_move, new_x, new_y){
             currentFigureRef.current.figure.style.pointerEvents = "all"
-            // tu coś podmienić bo stawia się na polu do przodu (zamiast 3 4 jest 3 3)
+
             if(can_move){
                 currentFigureRef.current.update_pos(new_x, new_y)
             }else{
@@ -83,16 +83,36 @@ function Game(){
             }
             setDropped(p => false)
             setCurrentFigure(p => null)
+
+            // Cleaning up posssible moves after a move
+            let copy = [...visualBoard]
+            for(let i = 0; i < board_length; i++){
+                for(let j = 0; j < board_length; j++){
+                    copy[i][j].possible_move = false
+                }
+            }
+            setVisualBoard(p => copy)
+        }
+
+        function possible_moves(moves){
+            let pom_board = [...visualBoard]
+            console.log(moves, " <- moves")
+            for(let i = 0; i < moves.length; i++){
+                pom_board[moves[i][0]][moves[i][1]].possible_move = true
+            }
+            setVisualBoard(p => pom_board)
         }
         
         socket.on("make-move", make_move)
         socket.on("board-data", get_board_data)
         socket.on("update-board", update_board)
+        socket.on("set-possible-moves", possible_moves)
 
         return () => {
             socket.off("make-move", make_move)
             socket.off("board-data", get_board_data)
             socket.off("update-board", update_board)
+            socket.off("set-possible-moves", possible_moves)
         }
     }, [socket])
 
@@ -101,7 +121,7 @@ function Game(){
         // After updating tile check if figure was dropped. Then drop it
         if(dropped && currentFigure != null){
             console.log(new_x, new_y, " <- there are new positions for figure")
-            socket.emit("make-move", id, color == "black" ? 7 - new_x : new_x, new_y, currentFigure.old_pos)
+            socket.emit("make-move", id, new_x, new_y, currentFigure.old_pos)
         }
     }
 
@@ -155,7 +175,7 @@ function Game(){
                 <tbody>
                     {visualBoard.map((row, index) => {
                         return <tr key={index}>{row.map((tile, index2) => {
-                            return <td key={index2}><Tile key={tile.x * board_length + tile.y} x={tile.x} y={tile.y} set_current={change_current_tile} /></td>
+                            return <td key={index2}><Tile key={tile.x * board_length + tile.y} x={tile.x} y={tile.y} possible_move={tile.possible_move} set_current={change_current_tile} /></td>
                         })
                     }</tr>})}
                 </tbody>

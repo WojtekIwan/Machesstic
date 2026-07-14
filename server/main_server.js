@@ -65,6 +65,7 @@ io.on("connection", (socket) => {
         
         console.log(`Player: ${player.username} is making a move!`)
 
+        x = color == "black" ? 7 - x : x
         let can_move = game.move_figure(color, x, y, old.x, old.y)
 
         socket.emit("make-move", can_move, x, y)
@@ -114,8 +115,16 @@ io.on("connection", (socket) => {
         if(game_in_database && current_games.has(id)){
             let game = current_games.get(id)
             let player = players_lobby.get(user_id)
-            game.chessboard.get_possible_moves(x, y, player.color)
+            let moves = game.chessboard.get_possible_moves(x, y, player.color)
+            let pom_moves = [...moves]
+            if(player.color == "black"){
+                for(let i = 0; i < pom_moves.length; i++){
+                    pom_moves[i] = [7 - pom_moves[i][0], pom_moves[i][1]]
+                }
+            }
+            socket.emit("set-possible-moves", pom_moves)
         }
+
     })
 })
 
