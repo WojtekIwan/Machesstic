@@ -78,6 +78,14 @@ io.on("connection", (socket) => {
     socket.on("join-game", async (id, user_id, callback) => {
         let game_in_database = await dc.get_game(id)
         if(game_in_database && current_games.has(id)){
+            // Game exist, now check if player is already in it
+            if(active_players.has(user_id) && active_players.get(user_id).game_id == id){
+                console.log("Already in game! Sending some funny data")
+                let user = active_players.get(user_id)
+                user.socket = socket
+                user.socket.join(id)
+                return callback()
+            }
             console.log("Joining game!")
             // If game exist join it
             let user = active_players.get(user_id)

@@ -3,7 +3,13 @@ export class ChessGame{
         this.board = []
         this.board_length = 8
         this.turn = "white"
+
+        // This is for checking if enemy king is in check and if king can move. If not other player win
+        this.white = []
+        this.black = []
+
         let pom = "RHBQKBHRPPPPPPPP................................PPPPPPPPRHBQKBHR"
+
 
         for(let i = 0; i < this.board_length; i++){
             this.board.push([])
@@ -12,6 +18,11 @@ export class ChessGame{
                 if(f != "."){
                     let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: []}
                     this.board[i].push(figure)
+                    if(figure.color == "white"){
+                        this.white.push(figure)
+                    }else{
+                        this.black.push(figure)
+                    }
                 }else{
                     this.board[i].push({name: f})
                 }
@@ -109,30 +120,73 @@ export class ChessGame{
             }
         }
         console.log("Possible moves for pawn: ", x, y, this.board[x][y].possible_moves)
-        // for(let pm of this.board[pom_x][y].possible_moves){
-        //     this.board[pm[0]][pm[1]] = {name: "*"}
-        // }
-        // this.print_chess_board()
         return this.board[x][y].possible_moves
     }
 
     h_moves(x, y, color){
         console.log("Possible moves for horse: ", x, y, color)
+        return []
     }
 
     b_moves(x, y, color){
         console.log("Possible moves for bishop: ", x, y, color)
+        return []
     }
 
     r_moves(x, y, color){
+        let rook = this.board[x][y]
+        let directions = {"left": true, "right": true, "top": true, "bottom": true}
+
+        let i = 0
+        let sd = directions.bottom || directions.left || directions.right || directions.top
+        while(sd){
+            if(directions.bottom && this.in_board(x + i, y) && this.board[x + i][y].name == "."){
+                rook.possible_moves.push([x + i, y])
+            }else{
+                directions.bottom = false
+            }
+
+            if(directions.top && this.in_board(x - i, y) && this.board[x - i][y].name == "."){
+                rook.possible_moves.push([x - i, y])
+            }else{
+                directions.top = false
+            }
+
+            if(directions.right && this.in_board(x, y + i) && this.board[x][y + i].name == "."){
+                rook.possible_moves.push([x, y + i])
+            }else{
+                directions.right = false
+            }
+
+            if(directions.left && this.in_board(x, y - i) && this.board[x][y - i].name == "."){
+                rook.possible_moves.push([x, y - i])
+            }else{
+                directions.left = false
+            }
+            i += 1
+        }
+        
         console.log("Possible moves for rook: ", x, y, color)
+        return rook.possible_moves
     }
 
     q_moves(x, y, color){
         console.log("Possible moves for queen: ", x, y, color)
+        return []
     }
 
     k_moves(x, y, color){
+        let king = this.board[x][y]
+        // check if king is checked. If it is eliminate some of his moves
+        // let enemy_moves = [...]
+        for(let i = -1; i < 2; i++){
+            for(let j = -1; j < 2; j++){
+                if(i != j && this.in_board(x + i, y + j)){
+                    king.possible_moves.push([x + i, y + j])
+                }
+            }
+        }
         console.log("Possible moves for king: ", x, y, color)
+        return king.possible_moves
     }
 }

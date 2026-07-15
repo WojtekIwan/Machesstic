@@ -135,7 +135,7 @@ class DatabaseConnector{
     // Getting record from jwt_for_users table if refresh token is there
     async check_refresh_token(refreshToken){
         let result = await this.pool.query(`Select * from jwt_for_users where jwt_for_users.refresh_token = ?;`, [refreshToken])
-        console.log(result, " <- this is check refresh token")
+        console.log(result, refreshToken, " <- this is check refresh token")
         if(result[0].length == 0){
             return {code: 400, message: "Refresh token not found"}
         }
