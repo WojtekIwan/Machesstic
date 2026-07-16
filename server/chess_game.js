@@ -16,7 +16,7 @@ export class ChessGame{
             for(let j = 0; j < this.board_length; j++){
                 let f = pom.charAt(i * this.board_length + j)
                 if(f != "."){
-                    let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: []}
+                    let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: [], first_move: true}
                     this.board[i].push(figure)
                     if(figure.color == "white"){
                         this.white.push(figure)
@@ -123,70 +123,98 @@ export class ChessGame{
         return this.board[x][y].possible_moves
     }
 
+    // Getting possible moves for horse
     h_moves(x, y, color){
-        console.log("Possible moves for horse: ", x, y, color)
-        return []
+        let horse = this.board[x][y]
+        let combinations = [[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]]
+        for(let i = 0; i < combinations.length; i++){
+            let new_x = x + combinations[i][0]
+            let new_y = y + combinations[i][1]
+            if(this.in_board(new_x, new_y) && this.board[new_x][new_y].name == "."){
+                horse.possible_moves.push([new_x, new_y])
+            }
+        }
+
+        console.log("Possible moves for horse: ", x, y, horse.possible_moves)
+        return horse.possible_moves
     }
 
+    // Getting possible moves for bishop
     b_moves(x, y, color){
-        console.log("Possible moves for bishop: ", x, y, color)
-        return []
-    }
+        let bishop = this.board[x][y]
+        let directions = {"bl": [1, -1], "br": [1, 1], "tl": [-1, -1], "tr": [-1, 1]} // Directions for bishop 
 
-    r_moves(x, y, color){
-        let rook = this.board[x][y]
-        let directions = {"left": true, "right": true, "top": true, "bottom": true}
-
-        let i = 0
-        let sd = directions.bottom || directions.left || directions.right || directions.top
-        while(sd){
-            if(directions.bottom && this.in_board(x + i, y) && this.board[x + i][y].name == "."){
-                rook.possible_moves.push([x + i, y])
-            }else{
-                directions.bottom = false
-            }
-
-            if(directions.top && this.in_board(x - i, y) && this.board[x - i][y].name == "."){
-                rook.possible_moves.push([x - i, y])
-            }else{
-                directions.top = false
-            }
-
-            if(directions.right && this.in_board(x, y + i) && this.board[x][y + i].name == "."){
-                rook.possible_moves.push([x, y + i])
-            }else{
-                directions.right = false
-            }
-
-            if(directions.left && this.in_board(x, y - i) && this.board[x][y - i].name == "."){
-                rook.possible_moves.push([x, y - i])
-            }else{
-                directions.left = false
+        let i = 1
+        do{
+            let sd = directions.bl || directions.br || directions.tl || directions.tr
+            // Iterating through directions, if it`s possible add move to possible moves
+            for (let [key, value] of Object.entries(directions)) {
+                let new_x = x + value[0] * i
+                let new_y = y + value[1] * i
+                if(value && this.in_board(new_x, new_y) && this.board[new_x][new_y].name == "."){
+                    bishop.possible_moves.push([new_x, new_y])
+                }else{
+                    directions[key] = false
+                }
             }
             i += 1
-        }
+        }while(sd)
         
-        console.log("Possible moves for rook: ", x, y, color)
+        console.log("Possible moves for bishop: ", x, y, bishop.possible_moves)
+        return bishop.possible_moves
+    }
+
+    // Getting possible moves for rook
+    r_moves(x, y, color){
+        let rook = this.board[x][y]
+        let directions = {"l": [0, -1], "r": [0, 1], "t": [-1, 0], "b": [1, 0]} // Directions for rook 
+
+        let i = 1
+        do{
+            let sd = directions.l || directions.r || directions.t || directions.b
+            // Iterating through directions, if it`s possible add move to possible moves
+            for (let [key, value] of Object.entries(directions)) {
+                let new_x = x + value[0] * i
+                let new_y = y + value[1] * i
+                if(value && this.in_board(new_x, new_y) && this.board[new_x][new_y].name == "."){
+                    rook.possible_moves.push([new_x, new_y])
+                }else{
+                    directions[key] = false
+                }
+            }
+            i += 1
+        }while(sd)
+        
+        console.log("Possible moves for rook: ", x, y, rook.possible_moves)
         return rook.possible_moves
     }
 
+    // Getting possible moves for queen (rook + bishop moves)
     q_moves(x, y, color){
-        console.log("Possible moves for queen: ", x, y, color)
-        return []
+        let queen = this.board[x][y]
+
+        let r = this.r_moves(x, y, color)
+        let b = this.b_moves(x, y, color)
+
+        queen.possible_moves = r.concat(b) // Adding up two arrays (bishop and rook)
+
+        console.log("Possible moves for queen: ", x, y, queen.possible_moves)
+        return queen.possible_moves
     }
 
+    // Getting possible moves for king
     k_moves(x, y, color){
         let king = this.board[x][y]
         // check if king is checked. If it is eliminate some of his moves
         // let enemy_moves = [...]
         for(let i = -1; i < 2; i++){
             for(let j = -1; j < 2; j++){
-                if(i != j && this.in_board(x + i, y + j)){
+                if(i != j && this.in_board(x + i, y + j) && this.board[x + i][y + j].name == "."){
                     king.possible_moves.push([x + i, y + j])
                 }
             }
         }
-        console.log("Possible moves for king: ", x, y, color)
+        console.log("Possible moves for king: ", x, y, king.possible_moves)
         return king.possible_moves
     }
 }
