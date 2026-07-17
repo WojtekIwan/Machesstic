@@ -116,24 +116,28 @@ function Game(){
         }
     }, [socket])
 
-    function change_current_tile(new_x, new_y, tile){
-        currentTileRef.current = {"x": new_x, "y": new_y, "tile": tile}
-        // After updating tile check if figure was dropped. Then drop it
-        if(dropped && currentFigure != null){
-            console.log(new_x, new_y, " <- there are new positions for figure")
-            socket.emit("make-move", id, new_x, new_y, currentFigure.old_pos)
-        }
-    }
+    // function change_current_tile(new_x, new_y, tile){
+    //     // After updating tile check if figure was dropped. Then drop it
+    //     if(dropped && currentFigure != null){
+    //         console.log(new_x, new_y, " <- there are new positions for figure")
+    //         socket.emit("make-move", id, new_x, new_y, currentFigure.old_pos)
+    //     }
+    // }
 
     function start_dragging(x, y){
         console.log("start dragging <- in game")
         socket.emit("possible-moves", x, y, params.id, idRef.current)
     }
 
-    function figure_drop(){
+    function figure_drop(x, y){ 
         if(!backRef.current){
+            currentTileRef.current = {"x": x, "y": y}
             currentFigure.figure.style.pointerEvents = "none"
             setDropped(p => true)
+            if(currentFigure != null){
+                console.log(x, y, " <- there are new positions for figure")
+                socket.emit("make-move", id, x, y, currentFigure.old_pos)
+            }
         }else{
             currentFigure.go_back()
             setCurrentFigure(p => null)
@@ -175,7 +179,7 @@ function Game(){
                 <tbody>
                     {visualBoard.map((row, index) => {
                         return <tr key={index}>{row.map((tile, index2) => {
-                            return <td key={index2}><Tile key={tile.x * board_length + tile.y} x={tile.x} y={tile.y} possible_move={tile.possible_move} set_current={change_current_tile} /></td>
+                            return <td key={index2}><Tile key={tile.x * board_length + tile.y} x={tile.x} y={tile.y} possible_move={tile.possible_move} /></td>
                         })
                     }</tr>})}
                 </tbody>

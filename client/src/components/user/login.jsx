@@ -40,7 +40,7 @@ function Login(){
             <div>
                 <img src={logo} alt="Logo for Machesstic" />
 
-                <h2>Log into your account:</h2>
+                <h2>Log to your account</h2>
 
                 <input type="text" placeholder="Enter your username or email..." id="usernameOrEmail" onChange={(e) => setUsernameOrEmail(p => e.target.value)}/>
 

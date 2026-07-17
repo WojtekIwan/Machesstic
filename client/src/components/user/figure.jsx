@@ -35,6 +35,10 @@ function Figure(props){
         }
     }
 
+    function clamp(num, max, min){
+        return Math.min(Math.max(num, max), min)
+    }
+
     function start_dragging_figure(e){
         figureRef.current = e.target
         setDrag(p => true)
@@ -59,8 +63,17 @@ function Figure(props){
 
     function drop_figure(e){
         if(drag){
+            // Checking the cords of mouse drop (setting x,y in board)
+            let box = props.table.current.getBoundingClientRect()
+            let x_drag = Math.min(Math.max(e.clientX, box.left), box.left + box.width) 
+            let y_drag = Math.min(Math.max(e.clientY, box.top), box.top + box.height) 
+
+            let x_in_table = parseInt(clamp(Math.round(x_drag - box.left) / 64, 0, 7))
+            let y_in_table = parseInt(clamp(Math.round(y_drag - box.top) / 64, 0, 7))
+
+            console.log(x_in_table, y_in_table)
             setDrag(p => false)
-            props.figure_drop()
+            props.figure_drop(y_in_table, x_in_table)
         }
     }
 
