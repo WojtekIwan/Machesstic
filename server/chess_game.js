@@ -62,8 +62,21 @@ export class ChessGame{
             }
 
             if(x == pom_x && y == old_y) return false
+
+            if(this.board[x][y].name != "."){
+                if(color == "black"){
+                    this.white.splice(this.white.indexOf(this.board[x][y]), 1)
+                }else{
+                    this.black.splice(this.black.indexOf(this.board[x][y]), 1)
+                }
+                console.log("A figure was taken from the board!")
+            }
             this.board[x][y] = this.board[pom_x][old_y]
             this.board[pom_x][old_y] = {name: "."}
+
+            this.board[x][y].first_move = false // Move was made (this is for pawns, and casteling)
+
+            console.log("figure -> ", this.board[x][y])
 
             this.turn = this.turn == "white" ? "black" : "white"
             this.print_chess_board()
@@ -90,6 +103,11 @@ export class ChessGame{
         x = color == "black" ? 7 - x : x
         let figure = this.board[x][y]
 
+        if(figure.color != color){
+            console.log("Not your figure mate")
+            return []
+        }
+
         figure.possible_moves = []
         
         if(figure.name == ".") return []
@@ -101,24 +119,32 @@ export class ChessGame{
         return x >= 0 && x < this.board_length && y >= 0 && y < this.board_length
     }
 
+    can_move(x, y, color){
+        return x >= 0 && x < this.board_length && y >= 0 && y < this.board_length && (this.board[x][y].name == "." || this.board[x][y].color != color)
+    }
+
+    // Possible moves for pawn
     p_moves(x, y, color){
-        if(color == "black"){
-            if(this.in_board(x + 1, y) && this.board[x + 1][y].name == "."){
-                this.board[x][y].possible_moves.push([x + 1, y])
-            }
+        let pom = color == "black" ? 1 : -1
+        let pawn = this.board[x][y]
 
-            if(this.in_board(x + 2, y) && this.board[x + 2][y].name == "."){
-                this.board[x][y].possible_moves.push([x + 2, y])
-            }
-        }else{
-            if(this.in_board(x - 1, y) && this.board[x - 1][y].name == "."){
-                this.board[x][y].possible_moves.push([x - 1, y])
-            }
+        if(this.in_board(x + pom, y) && this.board[x + pom][y].name == "."){
+            pawn.possible_moves.push([x + pom, y])
 
-            if(this.in_board(x - 2, y) && this.board[x - 2][y].name == "."){
-                this.board[x][y].possible_moves.push([x - 2, y])
+            if(pawn.first_move && this.in_board(x + pom * 2, y) && this.board[x + pom * 2][y].name == "."){
+                pawn.possible_moves.push([x + pom * 2, y])
             }
         }
+
+        // Taking figures (left and right)
+        if(this.can_move(x + pom, y + 1, color) && this.board[x + pom][y + 1].name != "."){
+            pawn.possible_moves.push([x + pom, y + 1])
+        }
+
+        if(this.can_move(x + pom, y - 1, color) && this.board[x + pom][y - 1].name != "."){
+            pawn.possible_moves.push([x + pom, y - 1])
+        }
+
         console.log("Possible moves for pawn: ", x, y, this.board[x][y].possible_moves)
         return this.board[x][y].possible_moves
     }
@@ -130,7 +156,7 @@ export class ChessGame{
         for(let i = 0; i < combinations.length; i++){
             let new_x = x + combinations[i][0]
             let new_y = y + combinations[i][1]
-            if(this.in_board(new_x, new_y) && this.board[new_x][new_y].name == "."){
+            if(this.can_move(new_x, new_y, color)){
                 horse.possible_moves.push([new_x, new_y])
             }
         }
@@ -145,13 +171,14 @@ export class ChessGame{
         let directions = {"bl": [1, -1], "br": [1, 1], "tl": [-1, -1], "tr": [-1, 1]} // Directions for bishop 
 
         let i = 1
+        let sd = true
         do{
-            let sd = directions.bl || directions.br || directions.tl || directions.tr
+            sd = directions.bl || directions.br || directions.tl || directions.tr
             // Iterating through directions, if it`s possible add move to possible moves
             for (let [key, value] of Object.entries(directions)) {
                 let new_x = x + value[0] * i
                 let new_y = y + value[1] * i
-                if(value && this.in_board(new_x, new_y) && this.board[new_x][new_y].name == "."){
+                if(value && this.can_move(new_x, new_y, color)){
                     bishop.possible_moves.push([new_x, new_y])
                 }else{
                     directions[key] = false
@@ -170,13 +197,14 @@ export class ChessGame{
         let directions = {"l": [0, -1], "r": [0, 1], "t": [-1, 0], "b": [1, 0]} // Directions for rook 
 
         let i = 1
+        let sd = true
         do{
-            let sd = directions.l || directions.r || directions.t || directions.b
+            sd = directions.l || directions.r || directions.t || directions.b
             // Iterating through directions, if it`s possible add move to possible moves
             for (let [key, value] of Object.entries(directions)) {
                 let new_x = x + value[0] * i
                 let new_y = y + value[1] * i
-                if(value && this.in_board(new_x, new_y) && this.board[new_x][new_y].name == "."){
+                if(value && this.can_move(new_x, new_y, color)){
                     rook.possible_moves.push([new_x, new_y])
                 }else{
                     directions[key] = false
@@ -209,7 +237,8 @@ export class ChessGame{
         // let enemy_moves = [...]
         for(let i = -1; i < 2; i++){
             for(let j = -1; j < 2; j++){
-                if(i != j && this.in_board(x + i, y + j) && this.board[x + i][y + j].name == "."){
+                if(this.can_move(x + i, y + j, color)){
+                    if(x + i == x && y + j == y) continue
                     king.possible_moves.push([x + i, y + j])
                 }
             }

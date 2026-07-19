@@ -56,3 +56,23 @@ if(droppedRef.current){
   	setDropped(p => false)
  	droppedRef.current = false
 }
+
+// Moves for pawn (old version)
+// if(color == "black"){
+        //     if(this.in_board(x + 1, y) && this.board[x + 1][y].name == "."){
+        //         this.board[x][y].possible_moves.push([x + 1, y])
+
+        //         if(this.in_board(x + 2, y) && this.board[x + 2][y].name == "."){
+        //             this.board[x][y].possible_moves.push([x + 2, y])
+        //         }
+        //     }
+
+        // }else{
+        //     if(this.in_board(x - 1, y) && this.board[x - 1][y].name == "."){
+        //         this.board[x][y].possible_moves.push([x - 1, y])
+        //     }
+
+        //     if(this.in_board(x - 2, y) && this.board[x - 2][y].name == "."){
+        //         this.board[x][y].possible_moves.push([x - 2, y])
+        //     }
+        // }

@@ -73,3 +73,7 @@ td{
     background: $additionalPurple;
     border-radius: 2rem;
 }
+
+.can_take{
+    border: 0.1rem solid $errorRed;
+}

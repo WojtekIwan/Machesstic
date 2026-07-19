@@ -43,6 +43,7 @@ function Figure(props){
         figureRef.current = e.target
         setDrag(p => true)
         let box = e.target.getBoundingClientRect()
+        e.target.style.zIndex = 999
         props.setCurrentFigure({"figure":e.target, "go_back": go_back, "update_pos": update_position, "old_pos": {"x": x, "y": y}})
         props.drag(x, y)
     }
@@ -78,7 +79,7 @@ function Figure(props){
     }
 
     return (
-        <div className='figure' onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}>{props.type}</div>
+        <div className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}>{props.type}</div>
     )
 }
 

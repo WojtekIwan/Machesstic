@@ -65,6 +65,7 @@ function Game(){
     useEffect(() => {
         function update_board(){
             socket.emit("get-game-data", idRef.current)
+            setBoard(p => board) // Another call of setBoard() to update the figures
         }
         
         function get_board_data(color, board){
@@ -116,14 +117,6 @@ function Game(){
         }
     }, [socket])
 
-    // function change_current_tile(new_x, new_y, tile){
-    //     // After updating tile check if figure was dropped. Then drop it
-    //     if(dropped && currentFigure != null){
-    //         console.log(new_x, new_y, " <- there are new positions for figure")
-    //         socket.emit("make-move", id, new_x, new_y, currentFigure.old_pos)
-    //     }
-    // }
-
     function start_dragging(x, y){
         console.log("start dragging <- in game")
         socket.emit("possible-moves", x, y, params.id, idRef.current)
@@ -133,6 +126,7 @@ function Game(){
         if(!backRef.current){
             currentTileRef.current = {"x": x, "y": y}
             currentFigure.figure.style.pointerEvents = "none"
+            currentFigure.figure.style.zIndex = 1
             setDropped(p => true)
             if(currentFigure != null){
                 console.log(x, y, " <- there are new positions for figure")
@@ -191,7 +185,8 @@ function Game(){
                 return <div key={x}>{row?.map((element, y) => {
                     if(element.name != "."){
                         let x2 = color == "black" ? 7 - x : x
-                        return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
+                        
+                        return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} possible_move={visualBoard[x2][y].possible_move} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
                     }
                 })}
                 </div>
