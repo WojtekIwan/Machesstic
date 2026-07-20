@@ -5,8 +5,8 @@ export class ChessGame{
         this.turn = "white"
 
         // This is for checking if enemy king is in check and if king can move. If not other player win
-        this.white = []
-        this.black = []
+        this.white_king = null
+        this.black_king = null
 
         let pom = "RHBQKBHRPPPPPPPP................................PPPPPPPPRHBQKBHR"
 
@@ -17,12 +17,17 @@ export class ChessGame{
                 let f = pom.charAt(i * this.board_length + j)
                 if(f != "."){
                     let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: [], first_move: true}
-                    this.board[i].push(figure)
-                    if(figure.color == "white"){
-                        this.white.push(figure)
-                    }else{
-                        this.black.push(figure)
+                    
+                    // Setting up a king for black and white
+                    if(figure.name == "K"){
+                        if(figure.color == "black"){
+                            this.black_king = [i, j]
+                        }else{
+                            this.white_king = [i, j]
+                        }
                     }
+
+                    this.board[i].push(figure)
                 }else{
                     this.board[i].push({name: f})
                 }
@@ -40,6 +45,29 @@ export class ChessGame{
             }
             console.log(str)
         }
+    }
+
+    // Checks if 'checkedColor' is checked (what a supprise). If so return true
+    is_in_check(checkedColor){
+        let checked_king = checkedColor == "black" ? this.black_king : this.white_king
+        console.log("Checked king position: ", checked_king, checkedColor)
+        for(let i = 0; i < this.board_length; i++){
+            for(let j = 0; j < this.board_length; j++){
+                if(this.board[i][j].name != "." && this.board[i][j].color != checkedColor){
+                    let figure = this.board[i][j]
+                    figure.possible_moves = [] // because there was a lot of same moves repeated
+                    let moves = eval(`this.${String(figure.name).toLowerCase()}_moves(${i}, ${j}, '${figure.color}')`)
+                    for(let p = 0; p < moves.length; p++){
+                        if(moves[p][0] == checked_king[0] && moves[p][1] == checked_king[1]){
+                            console.log("CHECKED!!!", this.board[checked_king[0]][checked_king[1]].color, "king is checked")
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+
+        return false
     }
 
     move_figure(color, x, y, old_x, old_y){
@@ -79,6 +107,9 @@ export class ChessGame{
             console.log("figure -> ", this.board[x][y])
 
             this.turn = this.turn == "white" ? "black" : "white"
+
+            this.is_in_check(this.turn) // Checking if enemy is checked
+
             this.print_chess_board()
             return true
         }else{
@@ -111,8 +142,10 @@ export class ChessGame{
         figure.possible_moves = []
         
         if(figure.name == ".") return []
+        let moves = eval(`this.${String(figure.name).toLowerCase()}_moves(${x}, ${y}, '${color}')`)
 
-        return eval(`this.${String(figure.name).toLowerCase()}_moves(${x}, ${y}, '${color}')`)
+        // Check if its checked
+        return moves
     }
 
     in_board(x, y){
@@ -160,7 +193,7 @@ export class ChessGame{
                 horse.possible_moves.push([new_x, new_y])
             }
         }
-
+        horse.possible_moves = horse.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         console.log("Possible moves for horse: ", x, y, horse.possible_moves)
         return horse.possible_moves
     }
@@ -180,13 +213,16 @@ export class ChessGame{
                 let new_y = y + value[1] * i
                 if(value && this.can_move(new_x, new_y, color)){
                     bishop.possible_moves.push([new_x, new_y])
+                    if(this.board[new_x][new_y].name != "."){
+                        directions[key] = false
+                    }
                 }else{
                     directions[key] = false
                 }
             }
             i += 1
         }while(sd)
-        
+        bishop.possible_moves = bishop.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         console.log("Possible moves for bishop: ", x, y, bishop.possible_moves)
         return bishop.possible_moves
     }
@@ -206,13 +242,16 @@ export class ChessGame{
                 let new_y = y + value[1] * i
                 if(value && this.can_move(new_x, new_y, color)){
                     rook.possible_moves.push([new_x, new_y])
+                    if(this.board[new_x][new_y].name != "."){
+                        directions[key] = false
+                    }
                 }else{
                     directions[key] = false
                 }
             }
             i += 1
         }while(sd)
-        
+        rook.possible_moves = rook.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         console.log("Possible moves for rook: ", x, y, rook.possible_moves)
         return rook.possible_moves
     }
@@ -225,7 +264,7 @@ export class ChessGame{
         let b = this.b_moves(x, y, color)
 
         queen.possible_moves = r.concat(b) // Adding up two arrays (bishop and rook)
-
+        queen.possible_moves = queen.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         console.log("Possible moves for queen: ", x, y, queen.possible_moves)
         return queen.possible_moves
     }
@@ -243,6 +282,7 @@ export class ChessGame{
                 }
             }
         }
+        king.possible_moves = king.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         console.log("Possible moves for king: ", x, y, king.possible_moves)
         return king.possible_moves
     }

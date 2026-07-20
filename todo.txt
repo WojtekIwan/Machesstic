@@ -1,4 +1,0 @@
-To do list:
-- add jwt authentication to logging in
-- add email verification
-- improved security
