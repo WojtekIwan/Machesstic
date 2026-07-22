@@ -172,9 +172,14 @@ function Game(){
             <table id="game_board" ref={tableRef}>
                 <tbody>
                     {visualBoard?.map((row, index) => {
+                        let notations = "abcdefgh"
                         return <tr key={index}>{row.map((tile, index2) => {
                             let x2 = color == "black" ? 7 - tile.x : tile.x
-                            return <td key={index2}><Tile key={x2 * board_length + tile.y} x={x2} y={tile.y} possible_move={tile.possible_move} /></td>
+
+                            let notation_x = tile.x == 7 ? notations.charAt(color == "black" ? 7 - tile.y : tile.y) : ""
+                            let notation_y = tile.y == 7 ? 7 - tile.x + 1 : 7 - x2 + 1 
+
+                            return <td key={index2}><Tile key={x2 * board_length + tile.y} x={x2} y={tile.y} possible_move={tile.possible_move} notation_x={notation_x} notation_y={notation_y} /></td>
                         })
                     }</tr>})}
                 </tbody>

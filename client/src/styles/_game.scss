@@ -14,6 +14,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 
     &:hover{
         background-color: rgb(201, 186, 172);
@@ -72,6 +73,20 @@ td{
     height: 1rem;
     background: $additionalPurple;
     border-radius: 2rem;
+}
+
+.notation_x{
+    position: absolute;
+    top: 103%;
+
+    @include paragraph()
+}
+
+.notation_y{
+    position: absolute;
+    left: 110%;
+
+    @include paragraph()
 }
 
 .can_take{
