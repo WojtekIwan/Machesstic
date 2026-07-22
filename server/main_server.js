@@ -123,7 +123,7 @@ io.on("connection", (socket) => {
         if(game_in_database && current_games.has(id)){
             let game = current_games.get(id)
             let player = players_lobby.get(user_id)
-            let moves = game.chessboard.get_possible_moves(x, y, player.color)
+            let moves = game.chessboard.get_possible_moves(player.color == "black" ? 7 - x : x, y, player.color)
             let pom_moves = [...moves]
             if(player.color == "black"){
                 for(let i = 0; i < pom_moves.length; i++){

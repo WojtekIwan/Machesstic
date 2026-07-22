@@ -17,6 +17,17 @@ function Game(){
     
     const socket = useContext(socketContext)
 
+    let currentTileRef = useRef(null)
+
+    let [dropped, setDropped] = useState(false)
+    let droppedRef = useRef(null)
+    let [currentFigure, setCurrentFigure] = useState(null)
+
+    const backRef = useRef(null)
+
+    const [board, setBoard] = useState(null)
+    const [color, setColor] = useState("")
+
     // Board section
     let board_length = 8
     const [visualBoard, setVisualBoard] = useState(() => {
@@ -30,17 +41,6 @@ function Game(){
         return tab
     })
 
-    let currentTileRef = useRef(null)
-
-    let [dropped, setDropped] = useState(false)
-    let droppedRef = useRef(null)
-    let [currentFigure, setCurrentFigure] = useState(null)
-
-    const backRef = useRef(null)
-
-    const [board, setBoard] = useState(null)
-    const [color, setColor] = useState("")
-    
     let params = useParams()
     useEffect(() => {
         axios.get("http://localhost:3000/user/get_user_data", {withCredentials: true}).then(res => {
@@ -171,9 +171,10 @@ function Game(){
             <h1>Welcome to game {username}</h1>
             <table id="game_board" ref={tableRef}>
                 <tbody>
-                    {visualBoard.map((row, index) => {
+                    {visualBoard?.map((row, index) => {
                         return <tr key={index}>{row.map((tile, index2) => {
-                            return <td key={index2}><Tile key={tile.x * board_length + tile.y} x={tile.x} y={tile.y} possible_move={tile.possible_move} /></td>
+                            let x2 = color == "black" ? 7 - tile.x : tile.x
+                            return <td key={index2}><Tile key={x2 * board_length + tile.y} x={x2} y={tile.y} possible_move={tile.possible_move} /></td>
                         })
                     }</tr>})}
                 </tbody>
@@ -184,8 +185,7 @@ function Game(){
             board?.map((row, x) => {
                 return <div key={x}>{row?.map((element, y) => {
                     if(element.name != "."){
-                        let x2 = color == "black" ? 7 - x : x
-                        
+                        let x2 = color == "black" ? 7 - x : x           
                         return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} possible_move={visualBoard[x2][y].possible_move} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
                     }
                 })}
