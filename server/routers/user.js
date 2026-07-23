@@ -81,8 +81,8 @@ user_router.post("/create_jwt", async (req, res) => {
 
 // Getting basic user data after authentication. IMPORTANT
 user_router.get("/get_user_data", jwt_connector.authenticate_token, (req, res) => {
-    console.log(`User data: [user id: ${req.user_id} username: ${req.username}]`)
-    return res.status(200).json({"user_id": req.user_id, "username": req.username})
+    console.log(`User data: [user id: ${req.user_id} username: ${req.username} elo: ${req.elo}]`)
+    return res.status(200).json({"user_id": req.user_id, "username": req.username, "elo": req.elo})
 })
 
 export default user_router

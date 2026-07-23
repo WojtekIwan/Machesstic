@@ -9,10 +9,17 @@ import Tile from "./tile";
 import { socketContext } from "../../main";
 import { useParams } from "react-router-dom";
 
+import userDefault from "../../assets/user_default.png"
+
 
 function Game(){
     const [username, setUsername] = useState("")
     const [id, setId] = useState("")
+    const [elo, setElo] = useState(0)
+
+    const [enemyUsername, setEnemyUsername] = useState("")
+    const [enemyElo, setEnemyElo] = useState(0)
+
     const idRef = useRef(null)
     
     const socket = useContext(socketContext)
@@ -47,6 +54,8 @@ function Game(){
             // Setting username and id
             setUsername(p => res.data.username)
             setId(p => res.data.user_id)
+            setElo(p => res.data.elo)
+
             idRef.current = res.data.user_id
             
             // Joining game
@@ -68,10 +77,13 @@ function Game(){
             setBoard(p => board) // Another call of setBoard() to update the figures
         }
         
-        function get_board_data(color, board){
+        function get_board_data(color, board, enemy_username, enemy_elo){
             console.log("Board data: ", board, color)
             setBoard(p => board)
             setColor(p => color)
+
+            setEnemyUsername(p => enemy_username)
+            setEnemyElo(p=> enemy_elo)
         }
         
         function make_move(can_move, new_x, new_y){
@@ -168,7 +180,14 @@ function Game(){
 
     return (
         <div id="main_container">
-            <h1>Welcome to game {username}</h1>
+            <div id="enemy_profile">
+                <img src={userDefault} alt="user default profile" />
+                <div>
+                    <p>{enemyUsername}</p>
+                    <p>{enemyElo}</p>
+                </div>
+            </div>
+
             <table id="game_board" ref={tableRef}>
                 <tbody>
                     {visualBoard?.map((row, index) => {
@@ -196,6 +215,13 @@ function Game(){
                 })}
                 </div>
             }) : <div></div>}  
+            <div id="your_profile">
+                <img src={userDefault} alt="user default profile" />
+                <div>
+                    <p>{username}</p>
+                    <p>{elo}</p>
+                </div>
+            </div>
         </div>
     )
 }

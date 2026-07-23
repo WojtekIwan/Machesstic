@@ -82,8 +82,8 @@ class DatabaseConnector{
                 let account_creation_data = data.getFullYear() + "-" + (data.getMonth() + 1) + "-" + data.getDate()
 
                 try{
-                    await this.pool.query("insert into user_basic_info values (?, ?, ?, ?, ?)", 
-                        [crypto.randomUUID(), username, email, hashed_password, account_creation_data])
+                    await this.pool.query("insert into user_basic_info values (?, ?, ?, ?, ?, ?)", 
+                        [crypto.randomUUID(), username, email, hashed_password, account_creation_data, 100])
                 }catch(e){
                     error = true
                 }

@@ -23,7 +23,7 @@ function UserPage(){
             setUsername(p => res.data.username)
             setId(p => res.data.user_id)
 
-            socket.emit("join-server", res.data.user_id, res.data.username)
+            socket.emit("join-server", res.data.user_id, res.data.username, res.data.elo)
         })
         
     }, [])

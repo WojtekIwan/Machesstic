@@ -20,8 +20,8 @@ export async function create_tokens(user_id){
     let user_data = await dc.get_user_data_by_id(user_id)
     
     // Creating access and refresh token
-    let jwt_access = jwt.sign({"id": user_id, "username": user_data.username}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
-    let jwt_refresh = jwt.sign({"id": user_id, "username": user_data.username}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
+    let jwt_access = jwt.sign({"id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
+    let jwt_refresh = jwt.sign({"id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
         
     if(!jwt_exist){
         // If token do not exist create one
@@ -76,11 +76,13 @@ export async function authenticate_token(req, res, next){
 
                 req.user_id = result.user_id
                 req.username = result.username
+                req.elo = result.elo
 
                 next()
             }else{
                 req.user_id = user.id
                 req.username = user.username
+                req.elo = user.elo
 
                 next()
             }
@@ -100,12 +102,12 @@ export async function checkRefreshToken(req){
                 if(err){
                     data = null
                 }else{
-                    let new_access_token = jwt.sign({"id": user.id, "username": user.username}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
+                    let new_access_token = jwt.sign({"id": user.id, "username": user.username, "elo": user.elo}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
                     // When new access token is generated the refresh token is also changed
-                    let new_refresh_token = jwt.sign({"id": user.id, "username": user.username}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
+                    let new_refresh_token = jwt.sign({"id": user.id, "username": user.username, "elo": user.elo}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
                     await dc.update_token_for_user(user.id, new_refresh_token) // Updating new token for users
                     
-                    data = {"accessToken": new_access_token, "refreshToken": new_refresh_token, "user_id": user.id, "username": user.username}
+                    data = {"accessToken": new_access_token, "refreshToken": new_refresh_token, "user_id": user.id, "username": user.username, "elo": user.elo}
                 }
             })
         }

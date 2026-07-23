@@ -46,16 +46,27 @@ const current_games = new Map()
 
 // The connection of socket to server
 io.on("connection", (socket) => {
-    socket.on("join-server", (id, username) => {
+    socket.on("join-server", (id, username, elo) => {
         // If socket is not on the list then it is added
         if(!active_players.has(id)){
-            active_players.set(id, {"username": username, "socket": socket, "game_id": null, "color": null})
+            active_players.set(id, {"username": username, "socket": socket, "elo": elo, "game_id": null, "color": null})
         }
     })
 
     socket.on("get-game-data", (id) => {
         console.log("Getting user data")
-        socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board)
+        // Getting enemy basic data (for profile purpose)
+        let game = current_games.get(active_players.get(id).game_id)
+        let player = active_players.get(id)
+        let enemy = null
+        if(player.color == "white"){
+            enemy = active_players.get(game.black)
+        }else{
+            enemy = active_players.get(game.white)
+        }
+
+        console.log(enemy)
+        socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board, enemy.username, enemy.elo)
     })
 
     socket.on("make-move", async (id, x, y, old) => {
