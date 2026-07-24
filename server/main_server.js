@@ -70,6 +70,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("make-move", async (id, x, y, old) => {
+        if(current_games.get(player.game_id).finished) socket.emit("make-move", false, x, y)
         let player = active_players.get(id)
         let game = current_games.get(player.game_id).chessboard
         let color = id == current_games.get(player.game_id).white ? "white" : "black"
@@ -77,11 +78,26 @@ io.on("connection", (socket) => {
         console.log(`Player: ${player.username} is making a move!`)
 
         x = color == "black" ? 7 - x : x
-        let can_move = game.move_figure(color, x, y, old.x, old.y)
+        let move = game.move_figure(color, x, y, old.x, old.y)
 
-        socket.emit("make-move", can_move, x, y)
+        socket.emit("make-move", move.can_move, x, y)
         io.to(player.game_id).emit("update-board")
         
+        if(move.can_move){
+            if(move.checkmate){
+                let reason = "checkmated"
+                current_games.get(player.game_id).finished = true
+                if(game.turn == "white"){
+                    console.log(active_players, current_games.get(player.game_id).white, active_players.get(current_games.get(player.game_id).white))
+
+                    active_players.get(current_games.get(player.game_id).white).socket.emit("lose", reason)
+                    active_players.get(current_games.get(player.game_id).black).socket.emit("won", reason)
+                }else{
+                    active_players.get(current_games.get(player.game_id).black).socket.emit("lose", reason)
+                    active_players.get(current_games.get(player.game_id).white).socket.emit("won", reason)
+                }
+            }
+        }
         console.log("*****************************************************")
     })
 
@@ -166,7 +182,7 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
             players[1].socket.emit("start-game", game.game_id)
 
             const chessboard = new ChessGame()
-            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null})
+            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false})
 
             console.log("We got it - starting new game!")
             // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz

@@ -115,17 +115,29 @@ function Game(){
             }
             setVisualBoard(p => pom_board)
         }
+
+        function won(reason){
+            console.log("You won by", reason, "!!!")
+        }
+
+        function lose(reason){
+            console.log("You lost by", reason, "...")
+        }
         
         socket.on("make-move", make_move)
         socket.on("board-data", get_board_data)
         socket.on("update-board", update_board)
         socket.on("set-possible-moves", possible_moves)
+        socket.on("won", won)
+        socket.on("lose", lose)
 
         return () => {
             socket.off("make-move", make_move)
             socket.off("board-data", get_board_data)
             socket.off("update-board", update_board)
             socket.off("set-possible-moves", possible_moves)
+            socket.off("won", won)
+            socket.off("lose", lose)
         }
     }, [socket])
 
@@ -191,7 +203,7 @@ function Game(){
             <table id="game_board" ref={tableRef}>
                 <tbody>
                     {visualBoard?.map((row, index) => {
-                        let notations = "abcdefgh"
+                        let notations = "ABCDEFGH"
                         return <tr key={index}>{row.map((tile, index2) => {
                             let x2 = color == "black" ? 7 - tile.x : tile.x
 
