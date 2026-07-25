@@ -58,6 +58,7 @@ io.on("connection", (socket) => {
         // Getting enemy basic data (for profile purpose)
         let game = current_games.get(active_players.get(id).game_id)
         let player = active_players.get(id)
+
         let enemy = null
         if(player.color == "white"){
             enemy = active_players.get(game.black)
@@ -65,13 +66,13 @@ io.on("connection", (socket) => {
             enemy = active_players.get(game.white)
         }
 
-        console.log(enemy)
         socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board, enemy.username, enemy.elo)
     })
 
     socket.on("make-move", async (id, x, y, old) => {
-        if(current_games.get(player.game_id).finished) socket.emit("make-move", false, x, y)
         let player = active_players.get(id)
+        if(current_games.get(player.game_id).finished) socket.emit("make-move", false, x, y) // If finished return false
+
         let game = current_games.get(player.game_id).chessboard
         let color = id == current_games.get(player.game_id).white ? "white" : "black"
         
@@ -102,7 +103,7 @@ io.on("connection", (socket) => {
     })
 
     // Socket joins new game as soon as they got redirected to game
-    socket.on("join-game", async (id, user_id, callback) => {
+    socket.on("join-game", async (id, user_id) => {
         let game_in_database = await dc.get_game(id)
         if(game_in_database && current_games.has(id)){
             // Game exist, now check if player is already in it
@@ -111,7 +112,9 @@ io.on("connection", (socket) => {
                 let user = active_players.get(user_id)
                 user.socket = socket
                 user.socket.join(id)
-                return callback()
+
+                io.to(id).emit("update-board")
+                return
             }
             console.log("Joining game!")
             // If game exist join it
@@ -140,7 +143,13 @@ io.on("connection", (socket) => {
 
             user.game_id = id
             user.socket.join(id)
-            callback()
+
+            // Update when both join the game
+            if(current_game.white && current_game.black){
+                io.to(id).emit("update-board")
+            }else{
+                user.socket.emit("waiting-for-enemy")
+            }
         }
     })
 

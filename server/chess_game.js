@@ -55,14 +55,16 @@ export class ChessGame{
     is_in_check(checkedColor){
         for(let i = 0; i < this.board_length; i++){
             for(let j = 0; j < this.board_length; j++){
+                if(this.board[i][j].name == "K") continue // If king is checking you, congrats (it`s impossible)
                 // If it`s enemy figure check it`s possible moves. Then if player king is in that moves return true
                 if(this.board[i][j].name != "." && this.board[i][j].color != checkedColor){
                     let figure = this.board[i][j]
                     figure.possible_moves = [] // because there was a lot of same moves repeated
+                    
                     eval(`this.${String(figure.name).toLowerCase()}_moves(${i}, ${j}, '${figure.color}')`)
 
                     for(let p = 0; p < figure.possible_moves.length; p++){
-                        if(figure.possible_moves[p][0] == this.king[checkedColor][0] && figure.possible_moves[p][1] ==  this.king[checkedColor][1]){
+                        if(figure.possible_moves[p][0] == this.kings[checkedColor][0] && figure.possible_moves[p][1] ==  this.kings[checkedColor][1]){
                             // There is a check from an enemy figure (return true)
                             return true
                         }
@@ -94,6 +96,25 @@ export class ChessGame{
             }
             
             if(x == pom_x && y == old_y) return {can_move: false} // Figure returend to original position, so move wasn`t made
+
+            if(this.board[pom_x][old_y].name == "K" && (old_y == y + 2 || old_y == y - 2)){
+                console.log("This is a castle")
+                
+                // Moving a rook
+                if(old_y == y + 2){
+                    // This is short castle
+                    let rook = this.board[x][7]
+                    rook.first_move = false
+                    this.board[x][0] = {name: "."}
+                    this.board[x][y + 1] = rook
+                }else{
+                    // This is long castle
+                    let rook = this.board[x][0]
+                    rook.first_move = false
+                    this.board[x][7] = {name: "."}
+                    this.board[x][y - 1] = rook
+                }
+            }
 
             // Actualy making a move
             this.board[x][y] = this.board[pom_x][old_y]
@@ -137,6 +158,11 @@ export class ChessGame{
         return true // Checkmate!
     }
 
+    // If you don`t have moves and enemy is not checking you then its stalemate
+    is_stalemate(){
+
+    }
+
     // Checking if x and y is in possible moves
     contains_move(figure, x, y){
         for(let i = 0; i < figure.possible_moves.length; i++){
@@ -177,7 +203,6 @@ export class ChessGame{
 
             // There is no check so you can make this move
             if(!this.is_in_check(color)){
-                this.print_chess_board()
                 moves_under_check.push(moves[i])
             }
 
@@ -242,9 +267,6 @@ export class ChessGame{
             }
 
         }
-
-        // In each figure there is filtering, so there are no repeated possible moves
-        horse.possible_moves = horse.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         return horse.possible_moves
     }
 
@@ -273,9 +295,6 @@ export class ChessGame{
             }
             i += 1
         }while(sd)
-
-        // In each figure there is filtering, so there are no repeated possible moves
-        bishop.possible_moves = bishop.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         return bishop.possible_moves
     }
 
@@ -304,8 +323,6 @@ export class ChessGame{
             }
             i += 1
         }while(sd)
-        // In each figure there is filtering, so there are no repeated possible moves
-        rook.possible_moves = rook.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         return rook.possible_moves
     }
 
@@ -317,8 +334,6 @@ export class ChessGame{
         let b = this.b_moves(x, y, color)
 
         queen.possible_moves = r.concat(b) // Adding up two arrays (bishop and rook)
-        // In each figure there is filtering, so there are no repeated possible moves
-        queen.possible_moves = queen.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
         return queen.possible_moves
     }
 
@@ -334,8 +349,37 @@ export class ChessGame{
                 }
             }
         }
-        // In each figure there is filtering, so there are no repeated possible moves
-        king.possible_moves = king.possible_moves.filter((value, index, array) => array.indexOf(value) === index)
+
+        // CASTELING
+        // If possible add moves responsible for casteling
+        if(king.first_move && !this.is_in_check(king.color)){
+            let pom = king.color == "black" ? 0 : 7
+            let left = true
+            let right = true
+            // Left rook
+            if(this.board[pom][0].name == "R" && this.board[pom][0].first_move){
+                // Neither of figures moved so you can check if tiles are in check
+                for(let i = 1; i < y; i++){
+                    if(this.board[pom][i].name != "." || this.is_in_check(king.color)){
+                        left = false
+                    }
+                }
+            }
+
+            // Right rook
+            if(this.board[pom][7].name == "R" && this.board[pom][7].first_move){
+                // Neither of figures moved so you can check if tiles are in check
+                for(let i = 6; i > y; i--){
+                    if(this.board[pom][i].name != "." || this.is_in_check(king.color)){
+                        right = false
+                    }
+                }
+            }
+
+            if(left) king.possible_moves.push([pom, y - 2])
+            if(right) king.possible_moves.push([pom, y + 2])
+        }
+
         return king.possible_moves
     }
 }

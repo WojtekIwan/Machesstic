@@ -59,9 +59,7 @@ function Game(){
             idRef.current = res.data.user_id
             
             // Joining game
-            socket.emit("join-game", params.id, res.data.user_id, (response) => {
-                socket.emit("get-game-data", res.data.user_id)
-            })
+            socket.emit("join-game", params.id, res.data.user_id)
         })
     }, [])
 
@@ -123,6 +121,10 @@ function Game(){
         function lose(reason){
             console.log("You lost by", reason, "...")
         }
+
+        function waiting_for_enemy(){
+            console.log("Waiting for enemy...")
+        }
         
         socket.on("make-move", make_move)
         socket.on("board-data", get_board_data)
@@ -130,6 +132,7 @@ function Game(){
         socket.on("set-possible-moves", possible_moves)
         socket.on("won", won)
         socket.on("lose", lose)
+        socket.on("waiting-for-enemy", waiting_for_enemy)
 
         return () => {
             socket.off("make-move", make_move)
@@ -138,6 +141,7 @@ function Game(){
             socket.off("set-possible-moves", possible_moves)
             socket.off("won", won)
             socket.off("lose", lose)
+            socket.off("waiting-for-enemy", waiting_for_enemy)
         }
     }, [socket])
 

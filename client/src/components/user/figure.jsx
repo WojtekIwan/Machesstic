@@ -1,17 +1,23 @@
 import "../../styles/main.scss"
 import { useEffect, useRef, useState } from "react"
 
+import pawn_white from "../../assets/pawn_white.png"
+import pawn_black from "../../assets/pawn_black.png"
+
 function Figure(props){
     let [x, setX] = useState(props.x)
     let [y, setY] = useState(props.y)
 
     let figureRef = useRef(null)
 
+    let [imagePath, setImagePath] = useState("")
+    let images = {"pawn_white": pawn_white, "pawn_black": pawn_black}
+
     const [drag, setDrag] = useState(false)
 
     useEffect(() => {
         go_back()
-        figureRef.current.style.backgroundColor = props.color
+        set_propper_image()
     }, [])
 
     useEffect(() => {
@@ -78,8 +84,20 @@ function Figure(props){
         }
     }
 
+    function set_propper_image(){
+        switch(props.type){
+            case "P":
+                setImagePath(p => images["pawn_" + props.color])
+                break
+            default:
+                setImagePath(p => "")
+        }
+    }
+
     return (
-        <div className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}>{props.type}</div>
+        <div className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}>
+            <img src={imagePath}  alt={props.type}/>
+        </div>
     )
 }
 
