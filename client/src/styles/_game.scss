@@ -30,8 +30,8 @@ td{
 .figure{
     // border: 0.1rem solid rgb(153, 0, 255);
     // color: rgb(153, 0, 255);
-    height: 3.8rem;
-    width: 3.8rem;
+    height: 3.9rem;
+    width: 4rem;
     position: fixed;
     touch-action: none;
 
@@ -40,9 +40,10 @@ td{
     align-items: center;
 
     img{
-        height: 3.8rem;
-        width: 3.8rem;
-        image-rendering: pixelated;
+        height: 100%;
+        width: 100%;     
+        image-rendering: smooth;
+        transform: scale(1.25);
     }
 }
 
@@ -164,5 +165,5 @@ td{
     }
 }
 
-// C0C0C0 - shadowing for white FFFFFF
+// C0C0C0 CCCCCC - shadowing for white FFFFFF
 // 404040 - shadowing for black 000000

@@ -22,7 +22,7 @@ export class ChessGame{
             for(let j = 0; j < this.board_length; j++){
                 let f = pom.charAt(i * this.board_length + j)
                 if(f != "."){
-                    let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: [], first_move: true}
+                    let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: [], first_move: true, en_passant: false}
                     
                     // Setting up a king for black and white
                     if(figure.name == "K"){
@@ -69,6 +69,8 @@ export class ChessGame{
                             return true
                         }
                     }
+
+                    figure.possible_moves = [] // because there was a lot of same moves repeated
                 }
             }
         }
@@ -116,6 +118,12 @@ export class ChessGame{
                 }
             }
 
+            // For pawns: el passant was made
+            if(this.board[pom_x][old_y].name == "P" && pom_x != x && old_y != y && this.board[x][y].name == "."){
+                this.board[pom_x][y] = {name: "."}
+            }
+
+
             // Actualy making a move
             this.board[x][y] = this.board[pom_x][old_y]
             this.board[pom_x][old_y] = {name: "."}
@@ -125,7 +133,20 @@ export class ChessGame{
                 this.kings[this.board[x][y].color] = [x, y]
             }
 
-            this.board[x][y].first_move = false // Move was made (this is for pawns, and casteling)
+            // Clearing en passant
+            for(let i = 0; i < this.board_length; i++){
+                for(let j = 0; j < this.board_length; j++){
+                    if(this.board[i][j].name == "P"){
+                        this.board[i][j].en_passant = false
+                    }      
+                }
+            }
+            
+            // Pawn moved two tiles, en passant is possible, add it to en_passants
+            this.board[x][y].en_passant = this.board[x][y].name == "P" && Math.abs(x - pom_x) == 2 && this.board[x][y].first_move
+            
+            // Move was made (this is for pawns, and casteling)
+            this.board[x][y].first_move = false 
 
             this.turn = this.turn == "white" ? "black" : "white"
 
@@ -251,7 +272,17 @@ export class ChessGame{
             pawn.possible_moves.push([x + pom, y - 1])
         }
 
-        // TODO: El passant
+        // El passant
+        if(this.in_board(x, y - 1) && this.board[x][y - 1].name == "P" &&  this.board[x][y - 1].color != color && this.board[x][y - 1].en_passant){
+            pawn.possible_moves.push([x + pom, y - 1])
+            console.log(this.board[x][y - 1])
+        }
+
+        if(this.in_board(x, y + 1) && this.board[x][y + 1].name == "P" && this.board[x][y + 1].color != color  && this.board[x][y + 1].en_passant){
+            pawn.possible_moves.push([x + pom, y + 1])
+            console.log(this.board[x][y + 1].en_passant)
+        }
+
         return pawn.possible_moves
     }
 

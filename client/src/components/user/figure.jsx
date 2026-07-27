@@ -4,14 +4,20 @@ import { useEffect, useRef, useState } from "react"
 import pawn_white from "../../assets/pawn_white.png"
 import pawn_black from "../../assets/pawn_black.png"
 
+import bishop_white from "../../assets/bishop_white.png"
+import bishop_black from "../../assets/bishop_black.png"
+
 function Figure(props){
     let [x, setX] = useState(props.x)
     let [y, setY] = useState(props.y)
 
     let figureRef = useRef(null)
 
-    let [imagePath, setImagePath] = useState("")
-    let images = {"pawn_white": pawn_white, "pawn_black": pawn_black}
+    let [imagePath, setImagePath] = useState(null)
+    let images = {
+        "pawn_white": pawn_white, "pawn_black": pawn_black,
+        "bishop_white": bishop_white, "bishop_black": bishop_black
+    }
 
     const [drag, setDrag] = useState(false)
 
@@ -89,14 +95,17 @@ function Figure(props){
             case "P":
                 setImagePath(p => images["pawn_" + props.color])
                 break
+            case "B":
+                setImagePath(p => images["bishop_" + props.color])
+                break
             default:
-                setImagePath(p => "")
+                setImagePath(p => null)
         }
     }
 
     return (
-        <div className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}>
-            <img src={imagePath}  alt={props.type}/>
+        <div >
+            <img src={imagePath} className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}  alt={props.type}/>
         </div>
     )
 }
