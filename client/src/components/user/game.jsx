@@ -19,6 +19,7 @@ function Game(){
 
     const [enemyUsername, setEnemyUsername] = useState("")
     const [enemyElo, setEnemyElo] = useState(0)
+    const [enemyColor, setEnemyColor] = useState("")
 
     const idRef = useRef(null)
     
@@ -34,6 +35,12 @@ function Game(){
 
     const [board, setBoard] = useState(null)
     const [color, setColor] = useState("")
+
+    const [timers, setTimers] = useState({"white": 600, "black": 600})
+    const [blackTimer, setBlackTimer] = useState(0)
+    const [whiteTimer, setWhiteTimer] = useState(0)
+
+    let intervalId = null
 
     // Board section
     let board_length = 8
@@ -82,6 +89,7 @@ function Game(){
 
             setEnemyUsername(p => enemy_username)
             setEnemyElo(p=> enemy_elo)
+            setEnemyColor(p => color == "black" ? "white" : "black")
         }
         
         function make_move(can_move, new_x, new_y){
@@ -89,6 +97,9 @@ function Game(){
 
             if(can_move){
                 currentFigureRef.current.update_pos(new_x, new_y)
+                console.log("Interval was cleared!", intervalId)
+                clearInterval(intervalId)
+                intervalId = null
             }else{
                 currentFigureRef.current.go_back()
             }
@@ -114,34 +125,61 @@ function Game(){
             setVisualBoard(p => pom_board)
         }
 
-        function won(reason){
-            console.log("You won by", reason, "!!!")
-        }
-
-        function lose(reason){
-            console.log("You lost by", reason, "...")
-        }
-
         function waiting_for_enemy(){
             console.log("Waiting for enemy...")
         }
+
+        function finish(reason){
+            console.log(reason)
+        }
+
+        function update_timers(timersNew, whose){
+            console.log("***** STARTING TIMERS ******")
+            setTimers(p => timersNew)
+            
+            if(intervalId == null){
+                console.log("BIG STEP: ", whose)
+                intervalId = setInterval(() => {
+                    timersNew[whose] -= 1
+                    setBlackTimer(p => timersNew["black"])
+                    setWhiteTimer(p => timersNew["white"])
+                    console.log(timersNew, whose)
+                }, 1000)
+            }else{
+                clearInterval(intervalId)
+                intervalId = null
+                update_timers(timersNew, whose)
+            }
+        }
+
+        
         
         socket.on("make-move", make_move)
+
         socket.on("board-data", get_board_data)
         socket.on("update-board", update_board)
+
         socket.on("set-possible-moves", possible_moves)
-        socket.on("won", won)
-        socket.on("lose", lose)
+
+        socket.on("finish", finish)
+
         socket.on("waiting-for-enemy", waiting_for_enemy)
+
+        socket.on("update-timers", update_timers)
 
         return () => {
             socket.off("make-move", make_move)
+
             socket.off("board-data", get_board_data)
             socket.off("update-board", update_board)
+
             socket.off("set-possible-moves", possible_moves)
-            socket.off("won", won)
-            socket.off("lose", lose)
+
+            socket.off("finish", finish)
+
             socket.off("waiting-for-enemy", waiting_for_enemy)
+
+            socket.off("update-timers", update_timers)
         }
     }, [socket])
 
@@ -194,14 +232,18 @@ function Game(){
         }
     }
 
+    // Whole board and UI is generated here
     return (
         <div id="main_container">
             <div id="enemy_profile">
-                <img src={userDefault} alt="user default profile" />
                 <div>
-                    <p>{enemyUsername}</p>
-                    <p>{enemyElo}</p>
+                    <img src={userDefault} alt="user default profile" />
+                    <div>
+                        <p>{enemyUsername}</p>
+                        <p>{enemyElo}</p>
+                    </div>
                 </div>
+                <span>{timers[enemyColor] != null ? <p style={{backgroundColor: enemyColor, color: color}}>{Math.floor(timers[enemyColor] / 60)} : {Math.round(timers[enemyColor] % 60) <= 9 ? "0" + Math.round(timers[enemyColor] % 60) : Math.round(timers[enemyColor] % 60)}</p> : ""}</span>
             </div>
 
             <table id="game_board" ref={tableRef}>
@@ -232,11 +274,14 @@ function Game(){
                 </div>
             }) : <div></div>}  
             <div id="your_profile">
-                <img src={userDefault} alt="user default profile" />
                 <div>
-                    <p>{username}</p>
-                    <p>{elo}</p>
+                    <img src={userDefault} alt="user default profile" />
+                    <div>
+                        <p>{username}</p>
+                        <p>{elo}</p>
+                    </div>
                 </div>
+                <span>{timers[color] != null ? <p style={{backgroundColor: color, color: enemyColor}}>{Math.floor(timers[color] / 60)} : {Math.round(timers[color] % 60) <= 9 ? "0" + Math.round(timers[color] % 60) : Math.round(timers[color] % 60)}</p> : ""}</span>
             </div>
         </div>
     )

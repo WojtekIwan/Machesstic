@@ -50,6 +50,9 @@ io.on("connection", (socket) => {
         // If socket is not on the list then it is added
         if(!active_players.has(id)){
             active_players.set(id, {"username": username, "socket": socket, "elo": elo, "game_id": null, "color": null})
+        }else{
+            // User is already logged in - log him out or something like that
+
         }
     })
 
@@ -67,39 +70,59 @@ io.on("connection", (socket) => {
         }
 
         socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board, enemy.username, enemy.elo)
+        io.to(player.game_id).emit("update-timers", game.timers, game.chessboard.turn)
     })
 
     socket.on("make-move", async (id, x, y, old) => {
         let player = active_players.get(id)
         if(current_games.get(player.game_id).finished) socket.emit("make-move", false, x, y) // If finished return false
 
-        let game = current_games.get(player.game_id).chessboard
+        let game = current_games.get(player.game_id)
         let color = id == current_games.get(player.game_id).white ? "white" : "black"
         
         console.log(`Player: ${player.username} is making a move!`)
 
         x = color == "black" ? 7 - x : x
-        let move = game.move_figure(color, x, y, old.x, old.y)
+        let move = game.chessboard.move_figure(color, x, y, old.x, old.y)
 
         socket.emit("make-move", move.can_move, x, y)
-        io.to(player.game_id).emit("update-board")
-        
+
         if(move.can_move){
-            if(move.checkmate){
+            // Updating timers for each player
+            console.log(game, " <- das is eine game")
+
+            // Checking who moved and updating server time for him
+            console.log(id, " <- the ID")
+            if(id == game.white){
+                // White moved
+                game.timers.white = game.timers.white - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+            }else{
+                // Black moved
+                game.timers.black = game.timers.black - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+            }
+            game.last_move = Date.now()
+
+            // Checking endgames (stalemate, checkmate)
+            if(move.stalemate){
+                let reason = "stalemate"
+                current_games.get(player.game_id).finished = true
+                io.to(player.game_id).emit("finished", "It`s a draw by stalemate")
+            }else if(move.checkmate){
                 let reason = "checkmated"
                 current_games.get(player.game_id).finished = true
                 if(game.turn == "white"){
-                    console.log(active_players, current_games.get(player.game_id).white, active_players.get(current_games.get(player.game_id).white))
-
-                    active_players.get(current_games.get(player.game_id).white).socket.emit("lose", reason)
-                    active_players.get(current_games.get(player.game_id).black).socket.emit("won", reason)
+                    active_players.get(current_games.get(player.game_id).white).socket.emit("finish", `You lost by ${reason}...`)
+                    active_players.get(current_games.get(player.game_id).black).socket.emit("finish", `You won by ${reason}!`)
                 }else{
-                    active_players.get(current_games.get(player.game_id).black).socket.emit("lose", reason)
-                    active_players.get(current_games.get(player.game_id).white).socket.emit("won", reason)
+                    active_players.get(current_games.get(player.game_id).black).socket.emit("finish", `You lost by ${reason}...`)
+                    active_players.get(current_games.get(player.game_id).white).socket.emit("finish", `You won by ${reason}!`)
                 }
             }
         }
         console.log("*****************************************************")
+        
+        io.to(player.game_id).emit("update-board")
+        
     })
 
     // Socket joins new game as soon as they got redirected to game
@@ -112,6 +135,17 @@ io.on("connection", (socket) => {
                 let user = active_players.get(user_id)
                 user.socket = socket
                 user.socket.join(id)
+                let game = current_games.get(user.game_id)
+
+                // When website is refreshed last move is changed
+                if(id == game.white){
+                    // White moved lately
+                    game.timers.white = game.timers.white - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+                }else{
+                    // Black moved lately
+                    game.timers.black = game.timers.black - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+                }
+                game.last_move = Date.now()
 
                 io.to(id).emit("update-board")
                 return
@@ -147,6 +181,7 @@ io.on("connection", (socket) => {
             // Update when both join the game
             if(current_game.white && current_game.black){
                 io.to(id).emit("update-board")
+                io.to(id).emit("update-timers", current_game.timers, current_game.chessboard.turn)
             }else{
                 user.socket.emit("waiting-for-enemy")
             }
@@ -190,8 +225,9 @@ app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
             players[0].socket.emit("start-game", game.game_id)
             players[1].socket.emit("start-game", game.game_id)
 
+            // const date = Date.now()
             const chessboard = new ChessGame()
-            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false})
+            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": 600, "white": 600}, "last_move": Date.now()})
 
             console.log("We got it - starting new game!")
             // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz

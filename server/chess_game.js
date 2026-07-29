@@ -151,7 +151,8 @@ export class ChessGame{
             this.turn = this.turn == "white" ? "black" : "white"
 
             this.print_chess_board()
-            return {can_move: true, checkmate: this.is_checkmate(this.turn)}
+
+            return {can_move: true, checkmate: this.is_checkmate(this.turn), stalemate: this.is_stalemate(this.turn)}
         }else{
             // You can`t make this move
             return {can_move: false}
@@ -180,8 +181,8 @@ export class ChessGame{
     }
 
     // If you don`t have moves and enemy is not checking you then its stalemate
-    is_stalemate(){
-
+    is_stalemate(color){
+        return this.is_checkmate(color) || !this.is_in_check(color)
     }
 
     // Checking if x and y is in possible moves
