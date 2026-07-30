@@ -1,11 +1,24 @@
 import "../../styles/main.scss"
 import { useEffect, useRef, useState } from "react"
 
+// Images imports for figure
 import pawn_white from "../../assets/pawn_white.png"
 import pawn_black from "../../assets/pawn_black.png"
 
 import bishop_white from "../../assets/bishop_white.png"
 import bishop_black from "../../assets/bishop_black.png"
+
+import horse_white from "../../assets/horse_white.png"
+import horse_black from "../../assets/horse_black.png"
+
+import rook_white from "../../assets/rook_white.png"
+import rook_black from "../../assets/rook_black.png"
+
+import queen_white from "../../assets/queen_white.png"
+import queen_black from "../../assets/queen_black.png"
+
+import king_white from "../../assets/king_white.png"
+import king_black from "../../assets/king_black.png"
 
 function Figure(props){
     let [x, setX] = useState(props.x)
@@ -15,8 +28,12 @@ function Figure(props){
 
     let [imagePath, setImagePath] = useState(null)
     let images = {
-        "pawn_white": pawn_white, "pawn_black": pawn_black,
-        "bishop_white": bishop_white, "bishop_black": bishop_black
+        "p_white": pawn_white, "p_black": pawn_black,
+        "b_white": bishop_white, "b_black": bishop_black,
+        "h_white": horse_white, "h_black": horse_black,
+        "r_white": rook_white, "r_black": rook_black,
+        "q_white": queen_white, "q_black": queen_black,
+        "k_white": king_white, "k_black": king_black,
     }
 
     const [drag, setDrag] = useState(false)
@@ -90,17 +107,9 @@ function Figure(props){
         }
     }
 
+    // Setting up image for figure
     function set_propper_image(){
-        switch(props.type){
-            case "P":
-                setImagePath(p => images["pawn_" + props.color])
-                break
-            case "B":
-                setImagePath(p => images["bishop_" + props.color])
-                break
-            default:
-                setImagePath(p => null)
-        }
+        setImagePath(p => images[String(props.type).toLowerCase() + "_" + props.color])
     }
 
     return (

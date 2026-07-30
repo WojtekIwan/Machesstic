@@ -87,12 +87,13 @@ io.on("connection", (socket) => {
 
         socket.emit("make-move", move.can_move, x, y)
 
+        if(!move.can_move && move.can_promote){
+            socket.emit("promotion", x, y)
+        }   
+
         if(move.can_move){
             // Updating timers for each player
-            console.log(game, " <- das is eine game")
-
             // Checking who moved and updating server time for him
-            console.log(id, " <- the ID")
             if(id == game.white){
                 // White moved
                 game.timers.white = game.timers.white - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
@@ -118,11 +119,26 @@ io.on("connection", (socket) => {
                     active_players.get(current_games.get(player.game_id).white).socket.emit("finish", `You won by ${reason}!`)
                 }
             }
+
+            io.to(player.game_id).emit("update-board")
+            console.log("*****************************************************")
         }
-        console.log("*****************************************************")
         
+        
+    })
+
+    socket.on("chose-promotion", (id, old, x, y, type) => {
+        let player = active_players.get(id)
+        let game = current_games.get(player.game_id)
+
+        let color = id == current_games.get(player.game_id).white ? "white" : "black"
+        
+        console.log(`Player: ${player.username} is promoting!`)
+
+        x = color == "black" ? 7 - x : x
+
+        game.chessboard.promote(color, x, y, old.x, old.y, type)
         io.to(player.game_id).emit("update-board")
-        
     })
 
     // Socket joins new game as soon as they got redirected to game
@@ -138,7 +154,7 @@ io.on("connection", (socket) => {
                 let game = current_games.get(user.game_id)
 
                 // When website is refreshed last move is changed
-                if(id == game.white){
+                if(game.chessboard.turn == "white"){
                     // White moved lately
                     game.timers.white = game.timers.white - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
                 }else{

@@ -99,6 +99,13 @@ export class ChessGame{
             
             if(x == pom_x && y == old_y) return {can_move: false} // Figure returend to original position, so move wasn`t made
 
+            // If it`s pawn and it reached the other side of a board - promote it
+            if(this.board[pom_x][old_y].name == "P"){
+                let pom = this.board[pom_x][old_y].color == "white" ? x == 0 : x == 7
+                console.log("Can promote...", pom, this.board[pom_x][old_y].color == "white" , x == 0 , x == 7)
+                if(pom) return {can_move: false, can_promote: true}
+            }
+
             if(this.board[pom_x][old_y].name == "K" && (old_y == y + 2 || old_y == y - 2)){
                 console.log("This is a castle")
                 
@@ -157,6 +164,12 @@ export class ChessGame{
             // You can`t make this move
             return {can_move: false}
         }
+    }
+
+    promote(color, x, y, old_x, old_y, type){
+        this.board[x][y] = {name: String(type).toUpperCase(), color: color, possible_moves: [], first_move: false, en_passant: false}
+        this.board[old_x][old_y] = {name: "."}
+        this.turn = color == "black" ? "white" : "black"
     }
 
     // Checks if given color is checkmated

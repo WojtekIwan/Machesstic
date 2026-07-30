@@ -11,6 +11,18 @@ import { useParams } from "react-router-dom";
 
 import userDefault from "../../assets/user_default.png"
 
+import bishop_white from "../../assets/bishop_white.png"
+import bishop_black from "../../assets/bishop_black.png"
+
+import horse_white from "../../assets/horse_white.png"
+import horse_black from "../../assets/horse_black.png"
+
+import rook_white from "../../assets/rook_white.png"
+import rook_black from "../../assets/rook_black.png"
+
+import queen_white from "../../assets/queen_white.png"
+import queen_black from "../../assets/queen_black.png"
+
 
 function Game(){
     const [username, setUsername] = useState("")
@@ -36,9 +48,18 @@ function Game(){
     const [board, setBoard] = useState(null)
     const [color, setColor] = useState("")
 
+    // User timers (for player and enemy)
     const [timers, setTimers] = useState({"white": 600, "black": 600})
     const [blackTimer, setBlackTimer] = useState(0)
     const [whiteTimer, setWhiteTimer] = useState(0)
+
+    const [promotion, setPromotion] = useState(false)
+    let images = {
+        "b_white": bishop_white, "b_black": bishop_black,
+        "h_white": horse_white, "h_black": horse_black,
+        "r_white": rook_white, "r_black": rook_black,
+        "q_white": queen_white, "q_black": queen_black
+    }
 
     let intervalId = null
 
@@ -80,6 +101,7 @@ function Game(){
         function update_board(){
             socket.emit("get-game-data", idRef.current)
             setBoard(p => board) // Another call of setBoard() to update the figures
+            setPromotion(p => null) // reset promotion varible
         }
         
         function get_board_data(color, board, enemy_username, enemy_elo){
@@ -104,7 +126,7 @@ function Game(){
                 currentFigureRef.current.go_back()
             }
             setDropped(p => false)
-            setCurrentFigure(p => null)
+            // setCurrentFigure(p => null)
 
             // Cleaning up posssible moves after a move
             let copy = [...visualBoard]
@@ -152,6 +174,9 @@ function Game(){
             }
         }
 
+        function promotion(x, y){
+            setPromotion(p => [x, y])
+        }
         
         
         socket.on("make-move", make_move)
@@ -167,6 +192,8 @@ function Game(){
 
         socket.on("update-timers", update_timers)
 
+        socket.on("promotion", promotion)
+
         return () => {
             socket.off("make-move", make_move)
 
@@ -180,6 +207,8 @@ function Game(){
             socket.off("waiting-for-enemy", waiting_for_enemy)
 
             socket.off("update-timers", update_timers)
+
+            socket.off("promotion", promotion)
         }
     }, [socket])
 
@@ -232,6 +261,11 @@ function Game(){
         }
     }
 
+    function choose_promotion(type){
+        console.log("You chose a " + type + " for promotion!", currentFigure)
+        socket.emit("chose-promotion", id, currentFigure.old_pos, promotion[0], promotion[1], type)
+    }
+
     // Whole board and UI is generated here
     return (
         <div id="main_container">
@@ -260,7 +294,15 @@ function Game(){
                         })
                     }</tr>})}
                 </tbody>
+
             </table>
+            {/* Promotion */}
+            {promotion ? <div id="promotion" style={{left: tableRef.current.getBoundingClientRect().left, top: tableRef.current.getBoundingClientRect().top}}>
+                <img src={images["h_" + color]} alt="horse for promotion" onClick={() => choose_promotion("h")} />
+                <img src={images["b_" + color]} alt="bishop for promotion" onClick={() => choose_promotion("b")} />
+                <img src={images["r_" + color]} alt="rook for promotion" onClick={() => choose_promotion("r")} />
+                <img src={images["q_" + color]} alt="queen for promotion" onClick={() => choose_promotion("q")} />
+            </div> : <></>}
 
             {/* Generating figures for board */}
             { board != null ? 

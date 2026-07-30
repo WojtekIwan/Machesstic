@@ -30,8 +30,7 @@ td{
 .figure{
     // border: 0.1rem solid rgb(153, 0, 255);
     // color: rgb(153, 0, 255);
-    height: 3.9rem;
-    width: 4rem;
+    
     position: fixed;
     touch-action: none;
 
@@ -39,12 +38,11 @@ td{
     justify-content: center;
     align-items: center;
 
-    img{
-        height: 100%;
-        width: 100%;     
-        image-rendering: smooth;
-        transform: scale(1.25);
-    }
+    height: 4rem;
+    width: 4rem;     
+    image-rendering: pixelated;
+    transform: scale(0.75);
+
 }
 
 #main_container{
@@ -192,5 +190,23 @@ td{
     }
 }
 
+#promotion{
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 3.8rem;
+    height: 15.8rem;
+    background-color: #CCCCCC;
+    z-index: 1000;
+    border: 0.1rem solid $additionalPurple;
+
+    img{
+        width: 4rem;
+        height: 3.9rem;
+        image-rendering: pixelated;
+        transform: scale(0.75);
+    }
+}
+
 // C0C0C0 CCCCCC - shadowing for white FFFFFF
-// 404040 - shadowing for black 000000
+// 404040 1e1e1e - shadowing for black 000000
