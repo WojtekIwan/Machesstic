@@ -36,13 +36,18 @@ app.use("/user", user_router) // Connection to user router
 
 // ***********************************************************************************
 //                                   GAME SECTION
-//      Its responsible for connecting to game and playing chess matches
+//          Its responsible for connecting to game and playing chess matches
 // ***********************************************************************************
 
-const players_lobby = new Map()
-const active_players = new Map()
+const players_lobby = new Map() // Only for joining games
+const active_players = new Map() // All players, only delete on disconnect
 
-const current_games = new Map()
+const current_games = new Map() // All games, delete only when empty
+
+// ***********************************************************************************
+//                                   SOCKET SECTION
+//      All socket events, from player making a move to leaving and joining a game
+// ***********************************************************************************
 
 // The connection of socket to server
 io.on("connection", (socket) => {
@@ -70,7 +75,12 @@ io.on("connection", (socket) => {
         }
 
         socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board, enemy.username, enemy.elo)
-        io.to(player.game_id).emit("update-timers", game.timers, game.chessboard.turn)
+        io.to(player.game_id).emit("update-timers", game.timers, game.chessboard.turn, game.finished)
+        // Jak gra skończona inaczej przesylaj dane
+
+        if(game.finished){
+            // Send endgame data
+        }
     })
 
     socket.on("make-move", async (id, x, y, old) => {
@@ -84,7 +94,7 @@ io.on("connection", (socket) => {
 
         x = color == "black" ? 7 - x : x
         let move = game.chessboard.move_figure(color, x, y, old.x, old.y)
-
+        console.log("MOVE PARAMS:", move)
         socket.emit("make-move", move.can_move, x, y)
 
         if(!move.can_move && move.can_promote){
@@ -105,18 +115,18 @@ io.on("connection", (socket) => {
 
             // Checking endgames (stalemate, checkmate)
             if(move.stalemate){
-                let reason = "stalemate"
                 current_games.get(player.game_id).finished = true
-                io.to(player.game_id).emit("finished", "It`s a draw by stalemate")
+                io.to(player.game_id).emit("finished", "stalemate", -1, 0)
             }else if(move.checkmate){
                 let reason = "checkmated"
                 current_games.get(player.game_id).finished = true
+                let elo_gained = 8 // Here come with some funny elo equation (scale with the diffrence from elo`s)
                 if(game.turn == "white"){
-                    active_players.get(current_games.get(player.game_id).white).socket.emit("finish", `You lost by ${reason}...`)
-                    active_players.get(current_games.get(player.game_id).black).socket.emit("finish", `You won by ${reason}!`)
+                    active_players.get(current_games.get(player.game_id).white).socket.emit("finish", reason, 1, elo_gained)
+                    active_players.get(current_games.get(player.game_id).black).socket.emit("finish", reason, 0, -elo_gained)
                 }else{
-                    active_players.get(current_games.get(player.game_id).black).socket.emit("finish", `You lost by ${reason}...`)
-                    active_players.get(current_games.get(player.game_id).white).socket.emit("finish", `You won by ${reason}!`)
+                    active_players.get(current_games.get(player.game_id).black).socket.emit("finish", reason, 1, elo_gained)
+                    active_players.get(current_games.get(player.game_id).white).socket.emit("finish", reason, 0, -elo_gained)
                 }
             }
 
@@ -124,7 +134,9 @@ io.on("connection", (socket) => {
             console.log("*****************************************************")
         }
         
-        
+        socket.on("disconnect", () => {
+            // cuś
+        })
     })
 
     socket.on("chose-promotion", (id, old, x, y, type) => {
@@ -154,14 +166,16 @@ io.on("connection", (socket) => {
                 let game = current_games.get(user.game_id)
 
                 // When website is refreshed last move is changed
-                if(game.chessboard.turn == "white"){
-                    // White moved lately
-                    game.timers.white = game.timers.white - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
-                }else{
-                    // Black moved lately
-                    game.timers.black = game.timers.black - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+                if(!game.finished){
+                    if(game.chessboard.turn == "white"){
+                        // White moved lately
+                        game.timers.white = game.timers.white - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+                    }else{
+                        // Black moved lately
+                        game.timers.black = game.timers.black - Math.round(Math.abs(Date.now() - game.last_move) / 1000)
+                    }
+                    game.last_move = Date.now()
                 }
-                game.last_move = Date.now()
 
                 io.to(id).emit("update-board")
                 return
@@ -197,7 +211,7 @@ io.on("connection", (socket) => {
             // Update when both join the game
             if(current_game.white && current_game.black){
                 io.to(id).emit("update-board")
-                io.to(id).emit("update-timers", current_game.timers, current_game.chessboard.turn)
+                io.to(id).emit("update-timers", current_game.timers, current_game.chessboard.turn, current_game.finished)
             }else{
                 user.socket.emit("waiting-for-enemy")
             }
@@ -209,7 +223,7 @@ io.on("connection", (socket) => {
         console.log("Checking possible moves...", game_in_database, current_games.has(id), id, current_games)
         if(game_in_database && current_games.has(id)){
             let game = current_games.get(id)
-            let player = players_lobby.get(user_id)
+            let player = active_players.get(user_id)
             let moves = game.chessboard.get_possible_moves(player.color == "black" ? 7 - x : x, y, player.color)
             let pom_moves = [...moves]
             if(player.color == "black"){
@@ -223,36 +237,55 @@ io.on("connection", (socket) => {
     })
 })
 
+// Finding game for player
 app.get("/find_game", jwt_connector.authenticate_token, async (req, res) => {
     console.log(`${req.username} wants to play!`)
-
+    // Player lobby do czego służy, active players do czego?  - przypomnienie jakbym nie pamiętał
     if(!players_lobby.has(req.user_id)){
         players_lobby.set(req.user_id, active_players.get(req.user_id))
 
-        if(players_lobby.size == 2){
-            // Tu logika dobierania graczy do solidnej poprawy - dobieranie po elo plus nie pętlą raczej
-            let players = []
-            for (const [key, value] of players_lobby.entries()) {
-                players.push({"player_id": key, "socket": value.socket})
-            }
+        // Matchmaking
+        let sorted_players = [...players_lobby.entries()].sort((a, b) => b.elo - a.elo)
 
-            let game = await dc.create_game(players[0].player_id, players[1].player_id)
+        let i = 2
+        while(i <= sorted_players.length){
+            // Getting players varibles
+            let player1_id = sorted_players[i - 1][0]
+            let player1 = sorted_players[i - 1][1]
             
-            players[0].socket.emit("start-game", game.game_id)
-            players[1].socket.emit("start-game", game.game_id)
+            let player2_id = sorted_players[i - 2][0]
+            let player2 = sorted_players[i - 2][1]
 
-            // const date = Date.now()
+            // Adding game to database
+            let game = await dc.create_game(player1_id, player2_id)
+
+            player1.socket.emit("start-game", game.game_id)
+            player2.socket.emit("start-game", game.game_id)
+
+            // Creating chessboard
             const chessboard = new ChessGame()
             current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": 600, "white": 600}, "last_move": Date.now()})
 
-            console.log("We got it - starting new game!")
-            // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz
+            console.log("We got it - starting new game for:", player1.username, "and", player2.username)
+             
+            // Remove players from player lobby so they wont be selected for other games
+            players_lobby.delete(player1_id)
+            players_lobby.delete(player2_id)
+            
+            sorted_players.splice(i - 2, 2) 
+
+            i += 2
         }
+
+        console.log(players_lobby, sorted_players)
+    }else{
+        console.log("Player already in lobby, can`t join again!")
     }
 
     return res.status(200)
 })
 
+// Starting server that listens on given port
 server.listen(process.env.SERVER_PORT, (e) => {
     if(!e){
         console.log(`Server is succesfully runing on port ${process.env.SERVER_PORT}`)

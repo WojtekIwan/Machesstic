@@ -1,0 +1,52 @@
+// ***********************************************************************************
+//                                 ENDGAME STYLES
+//                            Styling endgame window  
+// ***********************************************************************************
+@use "./varibles" as *;
+
+// Main container for endgame
+#endgame_container{
+    width: 35%;
+    height: 20rem;
+
+    position: absolute;
+    
+    background-color: $backgroundColor;
+
+    text-align: center;
+
+    // Won/lose title
+    h2{
+        @include h1_to_h3($h2Size);
+        margin-bottom: 0.1rem
+    }
+
+    // Reason
+    span{
+        @include paragraph();
+        font-size: 1rem;
+        margin-top: 0.1rem
+    }
+
+    // Elo gain/loss
+    p{
+        @include paragraph();
+    }
+
+    // Operation buttons
+    div{
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+
+        .btn{
+            @include button($additionalPink, $fontColor);
+            width: 6rem;
+            text-decoration: none;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}

@@ -76,3 +76,25 @@ if(droppedRef.current){
         //         this.board[x][y].possible_moves.push([x - 2, y])
         //     }
         // }
+
+		// Old matchmaking
+
+        // if(players_lobby.size == 2){
+        //     // Tu logika dobierania graczy do solidnej poprawy - dobieranie po elo plus nie pętlą raczej
+        //     let players = []
+        //     for (const [key, value] of players_lobby.entries()) {
+        //         players.push({"player_id": key, "socket": value.socket})
+        //     }
+
+        //     let game = await dc.create_game(players[0].player_id, players[1].player_id)
+            
+        //     players[0].socket.emit("start-game", game.game_id)
+        //     players[1].socket.emit("start-game", game.game_id)
+
+        //     // const date = Date.now()
+        //     const chessboard = new ChessGame()
+        //     current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": 600, "white": 600}, "last_move": Date.now()})
+
+        //     console.log("We got it - starting new game!")
+        //     // Tutaj dodać usuwanie graczy z lobby żeby nie dobierało kilku gier na raz
+        // }

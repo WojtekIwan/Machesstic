@@ -23,6 +23,8 @@ import rook_black from "../../assets/rook_black.png"
 import queen_white from "../../assets/queen_white.png"
 import queen_black from "../../assets/queen_black.png"
 
+import Endgame from "./game/endgame";
+
 
 function Game(){
     const [username, setUsername] = useState("")
@@ -62,6 +64,8 @@ function Game(){
     }
 
     let intervalId = null
+
+    const [finished, setFinished] = useState(null)
 
     // Board section
     let board_length = 8
@@ -151,13 +155,17 @@ function Game(){
             console.log("Waiting for enemy...")
         }
 
-        function finish(reason){
-            console.log(reason)
+        function finish(reason, won, eloGained){
+            console.log(reason, won, eloGained)
+            setFinished({"reason": reason, "won": won, "reward": eloGained})
+            intervalId = null
         }
 
-        function update_timers(timersNew, whose){
+        function update_timers(timersNew, whose, finished){
             console.log("***** STARTING TIMERS ******")
             setTimers(p => timersNew)
+
+            if(finished) return // Game is already finished, don`t do anything
             
             if(intervalId == null){
                 console.log("BIG STEP: ", whose)
@@ -325,6 +333,9 @@ function Game(){
                 </div>
                 <span>{timers[color] != null ? <p style={{backgroundColor: color, color: enemyColor}}>{Math.floor(timers[color] / 60)} : {Math.round(timers[color] % 60) <= 9 ? "0" + Math.round(timers[color] % 60) : Math.round(timers[color] % 60)}</p> : ""}</span>
             </div>
+
+            {/* If finished display endgame component */}
+            {finished ? <Endgame won={finished.won} reason={finished.reason} elo={elo} reward={finished.reward}></Endgame> : <></>}
         </div>
     )
 }

@@ -39,7 +39,6 @@ export class ChessGame{
         this.print_chess_board()
     }
 
-
     // Printing formated chessboard in console (helps in debugging)
     print_chess_board(){
         for(let i = 0; i < this.board_length; i++){
@@ -166,6 +165,7 @@ export class ChessGame{
         }
     }
 
+    // Promoting chosen figure if pawn reached the other site of the board
     promote(color, x, y, old_x, old_y, type){
         this.board[x][y] = {name: String(type).toUpperCase(), color: color, possible_moves: [], first_move: false, en_passant: false}
         this.board[old_x][old_y] = {name: "."}
@@ -195,7 +195,7 @@ export class ChessGame{
 
     // If you don`t have moves and enemy is not checking you then its stalemate
     is_stalemate(color){
-        return this.is_checkmate(color) || !this.is_in_check(color)
+        return this.is_checkmate(color) && !this.is_in_check(color)
     }
 
     // Checking if x and y is in possible moves
@@ -229,7 +229,7 @@ export class ChessGame{
 
             // Updating king position
             if(this.board[x][y].name == "K"){
-                this.kings[this.board[x][y].color] = [x, y]
+                this.kings[this.board[x][y].color] = moves[i] // King is moved to this position
             }
             
             // Moving figure
