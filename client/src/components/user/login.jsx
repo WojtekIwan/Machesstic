@@ -4,11 +4,12 @@
 // ***********************************************************************************
 
 // Imports
-import { useState } from "react"
+import { useState, useContext } from "react"
 import {Link, useNavigate} from "react-router-dom"
 import axios from "axios"
 import "../../styles/main.scss"
 import logo from "../../assets/logo.png"
+import { userContext } from "../../main";
 
 export default function Login(){
     const [usernameOrEmail, setUsernameOrEmail] = useState("")
@@ -17,6 +18,8 @@ export default function Login(){
     const [errorMessage, setErrorMessage] = useState("")
 
     const navigate = useNavigate()
+
+    const user = useContext(userContext)
 
     // Sending data to backend and validate it
     function check_login_data(e){
@@ -33,6 +36,7 @@ export default function Login(){
     // Sending request for creating jwt token
     function send_request_to_create_jwt_token(user_id){
         axios.post("http://localhost:3000/user/create_jwt", {"user_id": user_id}, {withCredentials: true}).then(res => {
+            user.fetch_data()
             navigate("/user") // After creating tokens navigate to user main page
         }).catch((err) => {
             setErrorMessage(p=> "Unexpected error")
