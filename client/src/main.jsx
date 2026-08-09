@@ -20,6 +20,7 @@ import Play from './components/user/play.jsx'
 import Profile from './components/user/profile.jsx'
 import About from './components/about.jsx'
 import GameHistory from './components/user/game_history.jsx'
+import Friends from './components/user/friends.jsx'
 
 // IO import
 import io from 'socket.io-client';
@@ -77,6 +78,11 @@ const router = createBrowserRouter([
   {
     path: "/game/:id",
     element: <Game/>,
+    errorElement: <Error/>
+  },
+  {
+    path: "/user/friends",
+    element: <Friends/>,
     errorElement: <Error/>
   }
 ])

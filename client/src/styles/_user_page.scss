@@ -1,0 +1,102 @@
+// ***********************************************************************************
+//                                  USER PAGE STYLES
+//                          Styling user page, navigation etc
+// ***********************************************************************************
+
+@use "./varibles" as *;
+
+#user_page{
+    width: 100%;
+    height: 100vh;
+    background-color: $backgroundColor;
+    display: flex;
+    flex-direction: row;
+
+    // Side navigation styles
+    nav{
+        background-color: $backgroundColorSecondary;
+        width: 20%;
+        height: 100vh;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+
+        // Logo at sidebar
+        .logo{
+            background-color: $backgroundColor;
+            width: 6rem;
+            height: 6rem;
+            border-radius: 3rem;
+        }
+
+        // Profile
+        .profile{
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            background-color: $backgroundColor;
+            text-decoration: none;
+            width: 80%;
+
+            img{
+                width: 2rem;
+                height: 2rem;
+                border-radius: 0.5rem;
+                padding: 0.2rem;
+                
+                background-color: $additionalPurple;
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+            }
+
+            div{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding-right: 0.5rem;
+                
+                h2{
+                    @include h1_to_h3($h3Size);
+                    margin-top: 0rem;
+                    margin-bottom: 0rem;
+                }
+
+                p{
+                    @include paragraph();
+                    margin-top: 0rem;
+                    margin-bottom: 0rem;
+                }
+            }
+        }
+
+        .link_to_page{
+            @include paragraph();
+            text-align: left;
+            width: 80%;
+            padding-left: 1rem;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: transform 0.1s ease-in-out;
+
+            &:hover{
+                color: $additionalPink;
+                transform: scale(1.05);
+            }
+        }
+
+        // Log out button
+        .log_out{
+            @include button($additionalPurple, $fontColor);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            margin-bottom: 1rem;
+            width: 90%;
+        }
+    }
+}
