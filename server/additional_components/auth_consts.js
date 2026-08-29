@@ -1,30 +1,20 @@
-import nodemailer from "nodemailer"
-import { configDotenv } from "dotenv"
+// +---------------------------------------------------------------------------------+
+// |                            AUTH CONSTS MODULE                                   |
+// |          Standarizing consts for auth files (cookies options, time etc)         |
+// +---------------------------------------------------------------------------------+
 
-configDotenv()
+// Cookies times
+export let fifteen_minuts = new Date(Date.now() + 15 * 60 * 1000)
+export let one_week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
-class EmailSender{
-    constructor(){
-        this.transporter = nodemailer.createTransport({
-            host: process.env.IMAP_HOST,
-            secure: true,
-            port: process.env.IMAP_PORT,
-            auth: {
-                user: process.env.IMAP_EMAIL,
-                pass: process.env.IMAP_PASSWORD
-            }
-        })
-    }
+// Cookie placeholder
+export function cookie_placeholder(time){
+    return {sameSite: "strict", path: "/", secure: true, httpOnly: true, expires: time}
+}
 
-    async sendVerificationMail(username, mail){
-        let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-        let code = ""
-        for(let i = 0; i < 8; i++){
-            code += letters.charAt(Math.floor(Math.random() * letters.length))
-        }
-
-        let html_for_verification = `
-        <!DOCTYPE html>
+// User verification template
+export function verification_email(username, code){
+    return `<!DOCTYPE html>
         <html>
             <head>
                 <style>
@@ -32,7 +22,6 @@ class EmailSender{
                     margin: 0;
                     padding: 0;
                     font-family: Arial, sans-serif;
-                    background-color: #e6ede6;
                 }
                 .email-container {
                     max-width: 600px;
@@ -82,21 +71,4 @@ class EmailSender{
                 </div>
             </body>
         </html>`
-
-        console.log("Sending mail to: ", mail)
-        try{
-            const info = await this.transporter.sendMail({
-                from: `Machesstic <${process.env.IMAP_EMAIL}>`,
-                to: mail,
-                subject: "Machesstic verification code",
-                html: html_for_verification
-            })
-        }catch(e){
-            return {send: false}
-        }
-
-        return {send: true, code: code}
-    }
 }
-
-export default EmailSender
