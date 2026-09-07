@@ -17,5 +17,5 @@ sketch
 
 docs.txt
 
-uploads/*
-!uploads/.gitkeep
+server/uploads/*
+!server/uploads/.gitkeep
