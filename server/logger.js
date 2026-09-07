@@ -28,4 +28,9 @@ export default class Logger{
     default_message(message){
         console.log(`[📃 ] ${message}`)
     }
+
+    // White text but with waiting
+    wait_message(message){
+        console.log(`[⏳ ] ${message}`)
+    }
 }
