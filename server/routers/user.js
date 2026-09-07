@@ -20,6 +20,14 @@ const dc = new DatabaseConnector()
 // Importing jwt connector
 import * as jwt_connector from "../jwt.js"
 
+// Imports for image upload
+import multer from "multer"
+import fs from "fs"
+import path from "path"
+
+import Logger from "../logger.js" // Logger for prettier console.log
+const logger = new Logger()
+
 // Setting up express router for user routes
 const user_router = express.Router()
 
@@ -107,6 +115,101 @@ user_router.get("/logout",  (req, res) => {
     res.clearCookie("accessToken", {path: "/", sameSite: "strict", secure: true, httpOnly: true})
     res.clearCookie("refreshToken", {path: "/", sameSite: "strict", secure: true, httpOnly: true})  
     return res.status(200).send("Cookies were sucesfully deleted")
+})
+
+// Get user additional data
+user_router.get("/additional_data", jwt_connector.authenticate_token, async (req, res) => {
+    let result = await dc.get_user_additional_data(req.user_id)
+
+    return res.status(200).json({"date": result["basic"]["creation_date"], "profile_image_path": result["additional"]["profile_image_path"], "profile_note": result["additional"]["profile_note"]})
+})
+
+
+// +---------------------------------------------------------------------------------+
+// |                         SET USER PROFILE PICTURE                                |
+// |                Multer is used for uploading images to server and                |
+// |                        saving them (uploads folder)                             |
+// +---------------------------------------------------------------------------------+
+
+// Multer storage for profile picuters
+const storage = multer.diskStorage({
+    // Where to save file - uploads folder
+    destination: (req, file, callBack) => {
+        callBack(null, 'uploads') // Uploads folder
+    },
+    // How to name file - user id with orginal extension, replace if needed
+    filename: (req, file, callBack) => {
+        let path = `${req.user_id}_profile_picture.${file.originalname.split(".")[1]}`
+        req.profileImagePath = path
+        callBack(null, path)
+    }
+  }
+)
+
+// Multer init
+let upload = multer({storage: storage,  
+    // Checking if file is in correct format (jpeg, png)
+    fileFilter: (req, file, cb) => {
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+            return cb(new Error('Images only allowed'), false);
+        }
+        
+        cb(null, true)
+    },
+    // Maximum size of 1 MB
+    limits: { fileSize: 1 * 1024 * 1024 } 
+ })
+
+ const image_uploaded = upload.single('profileImage') // Function that uploads images (profile pictures in this case)
+
+ // Upadting user profile (profile picture, note and username)
+user_router.post('/update_profile', jwt_connector.authenticate_token, (req, res) => {
+    image_uploaded(req, res, async function (err) {
+        if (err) {     
+            return res.status(400).json({message: err.message}) // Error happend while uploading an image
+        }
+
+        let data = await dc.get_user_additional_data(req.user_id)
+
+        // Deleting other profile picture if exist (if extension is diffrent it will be deleted, otherwise replaced)
+        if(data.additional.profile_image_path != req.profileImagePath){
+            fs.unlink(path.join(process.cwd(), "uploads", data.additional.profile_image_path), (err) => {
+                if(err)  logger.warning("No file found")
+                logger.okay("File deleted succesfully")    
+            })
+        }
+        
+        // Update image path for user profile picture
+        if(req.profileImagePath) await dc.update_profile_image(req.user_id, req.profileImagePath) 
+        
+        // Profile note is not empty, user updated it
+        if(req.body.profileNote && req.body.profileNote != ""){
+            let result = await dc.update_profile_note(req.user_id, req.body.profileNote)
+            if(!result) return res.status(400).json({message: "You can`t use special characters in your note!"})
+        }
+
+        // Username is not empty, user wants to change it
+        if(req.body.profileUsername && req.body.profileUsername != ""){
+            let result = await dc.username_in_database(req.body.profileUsername) // Validate username
+            if(!result){
+                await dc.update_username(req.user_id, req.body.profileUsername)
+            }else{
+                return res.status(400).json({message: result})
+            }
+        }
+        
+        return res.status(200).json({message: "Profile updated correctly"})
+    })
+})
+
+// Refreshing user token
+user_router.post("/refresh_user_tokens", jwt_connector.authenticate_token, async (req, res) => {
+    let tokens = await jwt_connector.create_tokens(req.user_id)
+    // Creating cookies with tokens
+    res.cookie("accessToken", tokens.accessToken, auth_consts.cookie_placeholder(auth_consts.fifteen_minuts))
+    res.cookie("refreshToken", tokens.refreshToken, auth_consts.cookie_placeholder(auth_consts.one_week))
+
+    return res.status(200).json({message: "Refresh of tokens was succesfull"})
 })
 
 export default user_router

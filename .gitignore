@@ -16,3 +16,6 @@ sketch
 .env
 
 docs.txt
+
+uploads/*
+!uploads/.gitkeep
