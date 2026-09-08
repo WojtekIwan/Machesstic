@@ -1,25 +1,31 @@
-// ***********************************************************************************
-//                                   LOGIN COMPONENT
-//          It`s responsible for user logging in and validating login data
-// ***********************************************************************************
+// +---------------------------------------------------------------------------------+
+// |                                 LOGIN COMPONENT                                 |
+// |        It`s responsible for user logging in and validating login data           |
+// +---------------------------------------------------------------------------------+
 
 // Imports
+import axios from "axios"
+
 import { useState, useContext } from "react"
 import {Link, useNavigate} from "react-router-dom"
-import axios from "axios"
-import "../../styles/main.scss"
-import logo from "../../assets/logo.png"
-import { userContext } from "../../main";
 
+import "../../styles/main.scss"
+
+import {userContext } from "../../main";
+
+import logo from "../../assets/logo.png"
+
+// Login component
 export default function Login(){
+    // Login variables
     const [usernameOrEmail, setUsernameOrEmail] = useState("")
     const [password, setPassword] = useState("")
 
     const [errorMessage, setErrorMessage] = useState("")
 
-    const navigate = useNavigate()
+    const navigate = useNavigate() // For navigating between sites
 
-    const user = useContext(userContext)
+    const user = useContext(userContext) // Context (updating it on login)
 
     // Sending data to backend and validate it
     function check_login_data(e){
@@ -47,18 +53,23 @@ export default function Login(){
     return (
         <div id="log-in-form">
             <div>
+                {/* Logo */}
                 <img src={logo} alt="Logo for Machesstic" />
 
                 <h2>Log to your account</h2>
 
+                {/* Email input */}
                 <input type="text" placeholder="Enter your username or email..." id="usernameOrEmail" onChange={(e) => setUsernameOrEmail(p => e.target.value)}/>
 
+                {/* Password input */}
                 <input type="password" placeholder="Enter your password..." id="password" onChange={(e) => setPassword(p => e.target.value)}/>
 
                 <p className="error_paragraph">{errorMessage}</p>
 
+                {/* Button for logging in */}
                 <button onClick={(e) => check_login_data(e)}>Log into your account</button>
                 
+                {/* Redirect link */}
                 <Link to={"/user/create_account"} id="toCreateAccount">Don`t have account? Create one here</Link>
             </div>
         </div>
