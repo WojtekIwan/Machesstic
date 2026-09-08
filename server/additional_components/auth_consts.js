@@ -4,12 +4,12 @@
 // +---------------------------------------------------------------------------------+
 
 // Cookies times
-export let fifteen_minuts = new Date(Date.now() + 15 * 60 * 1000)
-export let one_week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+export let fifteen_minuts = 15 * 60 * 1000
+export let one_week = 7 * 24 * 60 * 60 * 1000
 
 // Cookie placeholder
 export function cookie_placeholder(time){
-    return {sameSite: "strict", path: "/", secure: true, httpOnly: true, expires: time}
+    return {sameSite: "strict", path: "/", secure: true, httpOnly: true, maxAge: time}
 }
 
 // User verification template
