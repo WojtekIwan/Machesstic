@@ -1,57 +1,32 @@
-import { useEffect, useContext } from "react"
-import axios from "axios"
-import { useState } from "react"
-import io from 'socket.io-client';
+// +---------------------------------------------------------------------------------+
+// |                           USER PAGE COMPONENT                                   |
+// |    It`s responsible all user operations (playing games, viewing profile etc.)   |
+// +---------------------------------------------------------------------------------+
+
+// Imports
+import { useContext } from "react"
+import { userContext } from "../../main";
+
 import "../../styles/main.scss"
-import { Link, useNavigate } from 'react-router-dom';
-import { socketContext } from "../../main";
 
+import SideBar from "./sidebar";
+import { Link } from "react-router-dom";
 
-function UserPage(){
-    const socket = useContext(socketContext)
-    
-    const [username, setUsername] = useState("")
-    const [id, setId] = useState("")
-    const navigate = useNavigate()
-
-    useEffect(() => {
-        axios.get("http://localhost:3000/user/get_user_data", {withCredentials: true}).then(res => {
-            if(res.data.code == 403){
-                navigate("/user/login")
-                alert("You have been logged out. Log in again")
-            }
-            setUsername(p => res.data.username)
-            setId(p => res.data.user_id)
-
-            socket.emit("join-server", res.data.user_id, res.data.username, res.data.elo)
-        })
-        
-    }, [])
-
-    useEffect(() => {
-        function start (game_id) {
-            navigate(`/game/${game_id}`)
-        }
-
-        socket.on("start-game", start)
-
-        return () => {
-            socket.off("start-game", start)
-        }
-    })
-
-    function find_game(e){
-        axios.get("http://localhost:3000/find_game", {withCredentials: true}).then(res => {
-            console.log(res.status)
-        })
-    }
+// Main user page component
+export default function UserPage(){
+    const user = useContext(userContext) // Basic user data
 
     return (   
-        <div>
-            <p>Welcome to our site {username}!</p>
-            <button onClick={(e) => find_game(e)}>Find game</button>
+        <div className="user_page">
+            {/* Side-navigation */}
+            <SideBar />
+            <section>
+                <div className="main_page">
+                    <h2>Welcome {user.username}!</h2>
+                    <p>Ready to play some games?</p>
+                    <Link to="/user/play" className="link">Play game</Link>
+                </div>
+            </section>
         </div>
     )
 }
-
-export default UserPage
