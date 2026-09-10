@@ -35,7 +35,7 @@ export default function Play(){
 
     function play_with_another_player(e){
         setWaiting(p => true)
-        axios.get("http://localhost:3000/find_game", {withCredentials: true}).then(res => {
+        axios.get(`http://localhost:3000/find_game/${gameTime}`, {withCredentials: true}).then(res => {
             console.log(res.status)
         })
     }
