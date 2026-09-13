@@ -68,15 +68,15 @@ axios.interceptors.response.use((res) => {return res},
 
 // Main layout 
 function MainLayout(){
-  // User data
-  const [username, setUsername] = useState(null)
-  const [id, setId] = useState(null)
-  const [elo, setElo] = useState(0)
-
-  // User additional data - conver it into object later
-  const [date, setDate] = useState(null)
-  const [profilePicture, setProfilePicture] = useState(null)
-  const [profileNote, setProfileNote] = useState(null)
+  // User data object
+  const [user, setUser] = useState({
+    username: null,
+    id: 0,
+    elo: 0,
+    creation_date: null, 
+    profile_note: null, 
+    profile_picture: null
+  })
   
   // If user data (username, elo or id) is not defined call fetch function
   useEffect(() => {    
@@ -88,7 +88,7 @@ function MainLayout(){
     // If socket could connect (middleware error for cookies in most times) re-fetch data
     socket.on("connect_error", error_conncetion_handler);
 
-    if(!id || !username || !elo) fetch_user_data() 
+    if(!user.id || !user.username || !user.elo) fetch_user_data() 
     
     // Clean up function
     return () => {
@@ -99,28 +99,26 @@ function MainLayout(){
 
   // Fetch user data from backend
   function fetch_user_data(){
-    axios.get("http://localhost:3000/user/get_user_data", {withCredentials: true}).then(res => {
-      // Main data - most important 
-      setUsername(previous => res.data.username)
-      setId(previous => res.data.user_id)
-      setElo(previous => res.data.elo)
-      
-      if(!socket.connected) socket.connect()
-      socket.emit("join-server", res.data.user_id, res.data.username, res.data.elo) // After refreshing data, join server again
+    axios.get("http://localhost:3000/user/get_user_full_data", {withCredentials: true}).then(res => {
+      // Getting main data - most important 
+      setUser(previous => ({
+        username: res.data.username,
+        id: res.data.id,
+        elo: res.data.elo,
+        creation_date: res.data.creation_date, 
+        profile_note: res.data.profile_note, 
+        profile_picture: res.data.profile_image_path
+      }))
 
-      // Getting additional varibles for user profile
-      axios.get("http://localhost:3000/user/additional_data", {withCredentials: true}).then(res => {
-        setProfilePicture(previous => res.data.profile_image_path)
-        setProfileNote(previous => res.data.profile_note)
-        setDate(previous => res.data.date)
-      })
+      if(!socket.connected) socket.connect() // Reconnect if needed
+      socket.emit("join-server", res.data.id, res.data.username, res.data.elo) // After refreshing data, join server again
     })
   }
 
   // Rendering app
   return (
     <socketContext.Provider value={socket}>
-      <userContext.Provider value={{fetch_data: fetch_user_data, id: id, elo: elo, username: username, profile_picture: profilePicture, profile_note: profileNote, date: date}}>
+      <userContext.Provider value={{fetch_data: fetch_user_data, id: user.id, elo: user.elo, username: user.username, profile_picture: user.profile_picture, profile_note: user.profile_note, date: user.date}}>
         <RouterProvider router={router}/>
       </userContext.Provider>
     </socketContext.Provider>

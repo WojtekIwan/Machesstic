@@ -118,10 +118,18 @@ user_router.get("/logout",  (req, res) => {
 })
 
 // Get user additional data
-user_router.get("/additional_data", jwt_connector.authenticate_token, async (req, res) => {
-    let result = await dc.get_user_additional_data(req.user_id)
+user_router.get("/get_user_full_data", jwt_connector.authenticate_token, async (req, res) => {
+    let result = await dc.get_user_additional_data(req.user_id) // getting additional data
 
-    return res.status(200).json({"date": result["basic"]["creation_date"], "profile_image_path": result["additional"]["profile_image_path"], "profile_note": result["additional"]["profile_note"]})
+    // Sending whole data to users
+    return res.status(200).json({
+        "id": req.user_id,
+        "username": req.username,
+        "elo": req.elo,
+        "date": result["basic"]["creation_date"], 
+        "profile_image_path": result["additional"]["profile_image_path"], 
+        "profile_note": result["additional"]["profile_note"]
+    })
 })
 
 
