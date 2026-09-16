@@ -144,18 +144,22 @@ io.on("connection", (socket) => {
 
     // Perform a move by a player
     socket.on("make-move", async (id, x, y, old) => {
-        let player = active_players.get(id)
+        let player = active_players.get(id) // Getting player reference
+        let g = await dc.get_game(player.game_id) // Getting a reference to game in database
+
+        if(!g || g.finished) socket.emit("make-move", false, x, y) // If finished return false
         if(current_games.get(player.game_id).finished) socket.emit("make-move", false, x, y) // If finished return false
 
         let game = current_games.get(player.game_id)
         let color = id == current_games.get(player.game_id).white ? "white" : "black"
         
-        console.log(`Player: ${player.username} is making a move!`)
+        logger.okay(`Player: ${player.username} is making a move!`)
 
-        x = color == "black" ? 7 - x : x
-        let move = game.chessboard.move_figure(color, x, y, old.x, old.y)
+        x = color == "black" ? 7 - x : x // Reversing for black
+        let move = game.chessboard.move_figure(color, x, y, old.x, old.y) // Making a move!
         socket.emit("make-move", move.can_move, x, y)
 
+        // If promotion is possible send signal to client (the UI on client site will be set)
         if(!move.can_move && move.can_promote){
             socket.emit("promotion", x, y)
         }   
@@ -178,13 +182,17 @@ io.on("connection", (socket) => {
             if(move.stalemate){
                 io.to(player.game_id).emit("finished", "stalemate", -1, 0)
                 // Update game in database
+
+                // TODO: CORRECTLY UPDATE ENDGAME
                 await dc.endgame(game.game_id, null, game.chessboard.moves_history) // null because it`s a draw
             }else if(move.checkmate){
                 let reason = "checkmated"
                 let white = active_players.get(game.white)
                 let black = active_players.get(game.black)
-                let elo_gained = 8 + Math.floor(Math.abs(white.elo - black.elo) / 8) // Here come with some funny elo equation (scale with the diffrence from elo`s). 
+
+                // Here come with some funny elo equation (scale with the diffrence from elo`s). 
                 // This formula is not perfect however it works
+                let elo_gained = 8 + Math.floor(Math.abs(white.elo - black.elo) / 8) 
 
                 // Depending on whose turn it is update win screen
                 if(game.turn == "white"){
@@ -194,23 +202,23 @@ io.on("connection", (socket) => {
                     black.socket.emit("finish", reason, 0, elo_gained)
                     white.socket.emit("finish", reason, 1, white.elo - elo_gained >= 0 ? -elo_gained : -(white.elo - elo_gained)) // For a case when enemy has less elo than a lose value
                 }
-
+                // TODO: BETTER GAME FINISH
                 // Update game database
                 await dc.endgame(game.game_id, game[game.turn], game.chessboard.moves_history, elo_gained, -elo_gained)
             }
 
             io.to(player.game_id).emit("update-board")
-        }
-        
+        }  
     })
 
     // On disconnect remove player from active players and eventually leave all games
     socket.on("disconnect", async () => {
-        let players = [...active_players.entries()]
+        let players = [...active_players.entries()] // Iterating through all players to see whose disconnected
         for(let i = 0; i < players.length; i++){
             if(players[i][1].socket == socket){
                 logger.wait_message(`${players[i][1].username} disconnected. Trying to connect...`)
 
+                // Setting up timer for player (after given time it`s pernamently disconnected)
                 let timer = setTimeout(async () => {
                     if(!disconnected_players.has(players[i][0])) return
                     logger.error(`${players[i][1].username} left the game!`)
@@ -236,26 +244,28 @@ io.on("connection", (socket) => {
                         
                         
                         // Update game database
+                        // TODO: BETTER ENDGAME
                         await dc.endgame(game.game_id, game[game.turn], game.chessboard.moves_history, elo_gained, -elo_gained)
                     }
                     active_players.delete(players[i][0]) // Delete player from active players
                 }, 10000)
+
                 disconnected_players.set(players[i][0], {"game_id": players[i][1].game_id, "color": players[i][1].color,  "timer": timer}) // Adding player to possible disconnects
             }
         }
     })
 
-    // Promoting some figure
-    socket.on("chose-promotion", (id, old, x, y, type) => {
+    // Promoting some figure (you don`t need to check if game is active all moves are blocked previously)
+    socket.on("choose-promotion", (id, old, x, y, type) => {
         let player = active_players.get(id)
         let game = current_games.get(player.game_id)
 
         let color = id == current_games.get(player.game_id).white ? "white" : "black"
-        
-        console.log(`Player: ${player.username} is promoting!`)
+        x = color == "black" ? 7 - x : x // Reversing for black again
 
-        x = color == "black" ? 7 - x : x
+        logger.okay(`Player: ${player.username} is promoting ${game.chessboard.board[x, y]} to ${type}!`)
 
+        // Promoting given figure to choosen type
         game.chessboard.promote(color, x, y, old.x, old.y, type)
         io.to(player.game_id).emit("update-board")
     })
@@ -314,22 +324,31 @@ io.on("connection", (socket) => {
         }else if(game_in_database && game_in_database.finished && !current_games.has(id) ){
             // The game is finished so show after game
             logger.warning("Game already finished. Showing after match preview...")
+
+            // TODO: DISPLAYING REVIEW
         }
     })
 
-    socket.on("possible-moves", async (x, y, id, user_id) => {
-        let game_in_database = await dc.get_game(id)
-        console.log("Checking possible moves...")
-        if(game_in_database && current_games.has(id)){
-            let game = current_games.get(id)
-            let player = active_players.get(user_id)
-            let moves = game.chessboard.get_possible_moves(player.color == "black" ? 7 - x : x, y, player.color)
+    // Return possible moves for given figure (only for displaying purposes)
+    socket.on("possible-moves", async (x, y, game_id, user_id) => {
+        let game_in_database = await dc.get_game(game_id)
+        // Checking if game is in database and if its finished
+        if(game_in_database && !game_in_database.finished && current_games.has(game_id)){
+            let game = current_games.get(game_id) // Getting game object
+            let player = active_players.get(user_id) // Getting user
+
+            // Returning moves that don`t end up in check
+            let moves = game.chessboard.get_possible_moves(player.color == "black" ? 7 - x : x, y, player.color) 
+
+            // Reversing moves for black (the board is flipped up for them)
             let pom_moves = [...moves]
             if(player.color == "black"){
                 for(let i = 0; i < pom_moves.length; i++){
                     pom_moves[i] = [7 - pom_moves[i][0], pom_moves[i][1]]
                 }
             }
+
+            // Setting up possible moves for user
             socket.emit("set-possible-moves", pom_moves)
         }
 

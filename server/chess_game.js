@@ -1,8 +1,8 @@
-// ***********************************************************************************
-//                                  GAME MODULE
-//      All that is connected to actual game, from chessboard, to moving and
-//                                also overal game
-// ***********************************************************************************
+// +---------------------------------------------------------------------------------+
+// |                                GAME MODULE                                      |
+// |        All that is connected to actual game, from chessboard, to moving and     |
+// |                              also overal game                                   |
+// +---------------------------------------------------------------------------------+
 export class ChessGame{
     // Chess game init
     constructor(){
@@ -13,6 +13,7 @@ export class ChessGame{
 
         // This is for checking if enemy king is in check and if king can move. If not other player win
         this.kings = {"black": null, "white": null}
+        this.moves_history = ""
 
         let pom = "RHBQKBHRPPPPPPPP................................PPPPPPPPRHBQKBHR" // We don`t talk about it, it works 
 
@@ -61,10 +62,10 @@ export class ChessGame{
                     figure.possible_moves = [] // because there was a lot of same moves repeated
                     
                     eval(`this.${String(figure.name).toLowerCase()}_moves(${i}, ${j}, '${figure.color}')`)
-
                     for(let p = 0; p < figure.possible_moves.length; p++){
                         if(figure.possible_moves[p][0] == this.kings[checkedColor][0] && figure.possible_moves[p][1] ==  this.kings[checkedColor][1]){
                             // There is a check from an enemy figure (return true)
+                            
                             return true
                         }
                     }
@@ -73,7 +74,6 @@ export class ChessGame{
                 }
             }
         }
-
         return false // No checks from enemy
     }
 
@@ -84,11 +84,8 @@ export class ChessGame{
         let occupied = this.board[pom_x][old_y].name != "."
 
         // Checks if it is player figure
-        if(occupied && this.board[pom_x][old_y].color != color){
-            console.log("Not your figure mate.")
-            return {can_move: false}
-        }
-
+        if(occupied && this.board[pom_x][old_y].color != color) return {can_move: false}
+        
         // If it`s player turn procced to move
         if(turn){
             // If not in possible moves than move can`t be made
@@ -100,14 +97,11 @@ export class ChessGame{
 
             // If it`s pawn and it reached the other side of a board - promote it
             if(this.board[pom_x][old_y].name == "P"){
-                let pom = this.board[pom_x][old_y].color == "white" ? x == 0 : x == 7
-                console.log("Can promote...", pom, this.board[pom_x][old_y].color == "white" , x == 0 , x == 7)
-                if(pom) return {can_move: false, can_promote: true}
+                if(this.board[pom_x][old_y].color == "white" ? x == 0 : x == 7) return {can_move: false, can_promote: true}
             }
 
-            if(this.board[pom_x][old_y].name == "K" && (old_y == y + 2 || old_y == y - 2)){
-                console.log("This is a castle")
-                
+            // Casteling
+            if(this.board[pom_x][old_y].name == "K" && (old_y == y + 2 || old_y == y - 2)){         
                 // Moving a rook
                 if(old_y == y + 2){
                     // This is short castle
@@ -128,7 +122,6 @@ export class ChessGame{
             if(this.board[pom_x][old_y].name == "P" && pom_x != x && old_y != y && this.board[x][y].name == "."){
                 this.board[pom_x][y] = {name: "."}
             }
-
 
             // Actualy making a move
             this.board[x][y] = this.board[pom_x][old_y]
@@ -154,6 +147,7 @@ export class ChessGame{
             // Move was made (this is for pawns, and casteling)
             this.board[x][y].first_move = false 
 
+            this.moves_history += this.board[x][y].color + this.board[x][y].name + String(x) + String(y) + "|" // Update the history
             this.turn = this.turn == "white" ? "black" : "white"
 
             this.print_chess_board()
@@ -169,7 +163,7 @@ export class ChessGame{
     promote(color, x, y, old_x, old_y, type){
         this.board[x][y] = {name: String(type).toUpperCase(), color: color, possible_moves: [], first_move: false, en_passant: false}
         this.board[old_x][old_y] = {name: "."}
-        this.turn = color == "black" ? "white" : "black"
+        this.turn = color == "black" ? "white" : "black" // Change turn after promotion
     }
 
     // Checks if given color is checkmated
@@ -212,11 +206,8 @@ export class ChessGame{
     get_possible_moves(x, y, color){
         let figure = this.board[x][y]
 
-        if(figure.color != color){
-            console.log("Not your figure mate")
-            return []
-        }
-
+        if(figure.color != color) return [] // Its not user figure, dont let him move it
+        
         figure.possible_moves = []
         
         if(figure.name == ".") return [] // That is not a figure (this case is not likely to happen but it`s safer to check)
@@ -243,7 +234,7 @@ export class ChessGame{
 
             // King is going back
             if(this.board[moves[i][0]][moves[i][1]].name == "K"){
-                this.kings[this.board[x][y].color] = [x, y]
+                this.kings[this.board[moves[i][0]][moves[i][1]].color] = [x, y]
             }
 
             // Going back
