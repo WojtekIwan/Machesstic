@@ -180,31 +180,26 @@ io.on("connection", (socket) => {
             current_games.get(player.game_id).finished = move.checkmate || move.stalemate
 
             if(move.stalemate){
-                io.to(player.game_id).emit("finished", "stalemate", -1, 0)
+                io.to(player.game_id).emit("finished", "By stalemate", -1, 0)
                 // Update game in database
-
-                // TODO: CORRECTLY UPDATE ENDGAME
-                await dc.endgame(game.game_id, null, game.chessboard.moves_history) // null because it`s a draw
+                await dc.endgame(game.game_id, null, game.chessboard.moves_history, 0, "stalemate") // null because it`s a draw
             }else if(move.checkmate){
-                let reason = "checkmated"
+                let reason = "By checkmate"
                 let white = active_players.get(game.white)
                 let black = active_players.get(game.black)
 
-                // Here come with some funny elo equation (scale with the diffrence from elo`s). 
-                // This formula is not perfect however it works
-                let elo_gained = 8 + Math.floor(Math.abs(white.elo - black.elo) / 8) 
-
                 // Depending on whose turn it is update win screen
-                if(game.turn == "white"){
-                    white.socket.emit("finish", reason, 0, elo_gained)
-                    black.socket.emit("finish", reason, 1, black.elo - elo_gained >= 0 ? -elo_gained : -(black.elo - elo_gained)) // For a case when enemy has less elo than a lose value
+                if(game.turn == "black"){
+                    white.socket.emit("finish", reason, 1, game.elo_gain)
+                    black.socket.emit("finish", reason, 0, black.elo - game.elo_gain >= 0 ? -game.elo_gain : -(black.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
                 }else{
-                    black.socket.emit("finish", reason, 0, elo_gained)
-                    white.socket.emit("finish", reason, 1, white.elo - elo_gained >= 0 ? -elo_gained : -(white.elo - elo_gained)) // For a case when enemy has less elo than a lose value
+                    black.socket.emit("finish", reason, 1, game.elo_gain)
+                    white.socket.emit("finish", reason, 0, white.elo - game.elo_gain >= 0 ? -game.elo_gain : -(white.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
                 }
-                // TODO: BETTER GAME FINISH
+
                 // Update game database
-                await dc.endgame(game.game_id, game[game.turn], game.chessboard.moves_history, elo_gained, -elo_gained)
+                let winner_color = game.chessboard.turn == "white" ? "black" : "white"
+                await dc.endgame(player.game_id, game[winner_color], game.chessboard.moves_history, game.elo_gain, "checkmate")
             }
 
             io.to(player.game_id).emit("update-board")
@@ -227,30 +222,30 @@ io.on("connection", (socket) => {
                         let game = current_games.get(players[i][1].game_id)
                         game.finished = true
                         
-                        let elo_gained = 8 + Math.floor(Math.abs(active_players.get(game.white).elo - active_players.get(game.black).elo) / 8)
-                        
-                        if(players[i][1].color == "white"){
-                            active_players.get(game.black).socket.emit("finish", "Enemy left", 1, elo_gained)
-                            game.white = null // Player left, remove him from game
-                        }else{
-                            active_players.get(game.white).socket.emit("finish", "Enemy left", 1, elo_gained)
-                            game.black = null // Player left, remove him from game
+                        // Update endgame for diffrent players
+                        let enemy = players[i][1].color == "white" ? "black" : "white"
+
+                        // Enemy is in game so he won
+                        if(active_players.has(game[enemy])){
+                            active_players.get(game[enemy]).socket.emit("finish", "Enemy left", 1, game.elo_gain)
+                            game[players[i][1].color] = null // Player left, remove him from game
                         }
                         
                         // If both left, end it
-                        if(game.white == null && game.black == null){
-                            current_games.delete(players[i][1].game_id) // deleting game from history
+                        if(game[enemy] == null){
+                            logger.warning("Closing game because there is no one in there")
+                            await dc.set_finished(players[i][1].game_id)
+                            current_games.delete(players[i][1].game_id) // Deleting game from history
+                        }else{
+                            // Update game database
+                            let winner = players[i][1].color == "white" ? "black" : "white"
+                            await dc.endgame(players[i][1].game_id, game[winner], game.chessboard.moves_history, game.elo_gain, "Enemy left")
                         }
-                        
-                        
-                        // Update game database
-                        // TODO: BETTER ENDGAME
-                        await dc.endgame(game.game_id, game[game.turn], game.chessboard.moves_history, elo_gained, -elo_gained)
                     }
                     active_players.delete(players[i][0]) // Delete player from active players
-                }, 10000)
+                }, process.env.PLAYER_TIMEOUT)
 
-                disconnected_players.set(players[i][0], {"game_id": players[i][1].game_id, "color": players[i][1].color,  "timer": timer}) // Adding player to possible disconnects
+                disconnected_players.set(players[i][0], {"game_id": players[i][1].game_id, "color": players[i][1].color, "timer": timer}) // Adding player to possible disconnects
             }
         }
     })
@@ -391,10 +386,14 @@ app.get("/find_game/:time", jwt_connector.authenticate_token, async (req, res) =
 
             // Adding game to database
             let game = await dc.create_game(player1_id, player2_id)
+
+            // Here I come with some funny elo equation (scale with the diffrence from elo`s). 
+            // This formula is not perfect however it works
+            let elo_gain = 8 + Math.floor(Math.abs(player1.elo - player2.elo) / 20) 
     
             // Creating chessboard and adding custom time for players (they cant play with enemy who choose diffrent time)
             const chessboard = new ChessGame()
-            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": Number(player1.play_time), "white": Number(player1.play_time)}, "last_move": Date.now()})
+            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": Number(player1.play_time), "white": Number(player1.play_time)}, "last_move": Date.now(), "elo_gain": elo_gain})
             
             logger.okay(`Starting new game for: ${player1.username} and ${player2.username}`)
             

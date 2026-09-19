@@ -14,8 +14,8 @@ export default function Endgame(props){
     return(
         <div id="endgame_container">
             <h2>{props.won == 1 ? "You won" : "You lost"}</h2>
-            <span>By {props.reason}</span>
-            <p>Elo: {props.elo} {props.won == 1 ? "+" : "-"} {Math.abs(props.reward)} = {props.elo - props.reward}</p>
+            <span>{props.reason}</span>
+            <p>Elo: {props.elo} {props.won == 1 ? "+" : "-"} {Math.abs(props.reward)} = {props.elo + props.reward}</p>
             <div>
                 <Link className="btn" to={"/user"}>Go to main menu</Link>
             </div>

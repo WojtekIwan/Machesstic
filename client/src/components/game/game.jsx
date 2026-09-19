@@ -164,6 +164,7 @@ export default function Game(){
             setFinished({"reason": reason, "won": won, "reward": eloGained})
             clearInterval(intervalId)
             intervalId = null
+            user.fetch_data() // Fetching after winning so data is updated
         }
 
         // Updating promotion if possible
