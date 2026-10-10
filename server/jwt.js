@@ -21,7 +21,7 @@ export async function create_tokens(user_id){
         let user_data = await dc.get_user_data_by_id(user_id) // Get user data by id
         
         // Creating access and refresh token
-        let jwt_access = jwt.sign({"user_id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
+        let jwt_access = jwt.sign({"user_id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15s"})
         let jwt_refresh = jwt.sign({"user_id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
             
         if(!jwt_exist){
@@ -44,16 +44,16 @@ export async function authenticate_token(req, res, next){
     const user_access_token = req.cookies.accessToken 
     const user_refresh_token = req.cookies.refreshToken
 
-    // If you don`t have both tokens, return 401 (you are not logged in)
-    if(!user_access_token && !user_refresh_token) return res.status(401).json({message: "You don`t have tokens! You need to log in!"})
+    // If you don`t have both tokens, return 403 (you are not logged in)
+    if(!user_access_token && !user_refresh_token) return res.status(403).json({message: "You don`t have tokens! You need to log in!"})
 
     // Verify access token
     jwt.verify(user_access_token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
         if(err){
-            // Checking if refresh token is in active in database. If expired, return 403
+            // Checking if refresh token is in active in database. If expired, return 401
             try{
                 let refresh_token_results = await check_refresh_token(user_refresh_token)
-                if(!refresh_token_results) return res.status(403).json({message: "You dont have refresh token"})
+                if(!refresh_token_results) return res.status(401).json({message: "You dont have refresh token"})
 
                 // Refresh token is defined so tokens are created and cookies are refreshed
                 let new_tokens = await create_tokens(refresh_token_results.user_id)

@@ -184,6 +184,7 @@ io.on("connection", (socket) => {
                 // Update game in database
                 await dc.endgame(game.game_id, null, game.chessboard.moves_history, 0, "stalemate") // null because it`s a draw
             }else if(move.checkmate){
+                game.finished = true
                 let reason = "By checkmate"
                 let white = active_players.get(game.white)
                 let black = active_players.get(game.black)
@@ -220,15 +221,15 @@ io.on("connection", (socket) => {
                     // Player is in game! Update it
                     if(players[i][1].game_id){
                         let game = current_games.get(players[i][1].game_id)
-                        game.finished = true
-                        
+                                 
                         // Update endgame for diffrent players
                         let enemy = players[i][1].color == "white" ? "black" : "white"
 
                         // Enemy is in game so he won
-                        if(active_players.has(game[enemy])){
+                        if(active_players.has(game[enemy]) && !game.finished){
                             active_players.get(game[enemy]).socket.emit("finish", "Enemy left", 1, game.elo_gain)
                             game[players[i][1].color] = null // Player left, remove him from game
+                            game.finished = true
                         }
                         
                         // If both left, end it
@@ -236,8 +237,8 @@ io.on("connection", (socket) => {
                             logger.warning("Closing game because there is no one in there")
                             await dc.set_finished(players[i][1].game_id)
                             current_games.delete(players[i][1].game_id) // Deleting game from history
-                        }else{
-                            // Update game database
+                        }else if(!game.finished){
+                            // Update game database if not finished
                             let winner = players[i][1].color == "white" ? "black" : "white"
                             await dc.endgame(players[i][1].game_id, game[winner], game.chessboard.moves_history, game.elo_gain, "Enemy left")
                         }
@@ -313,6 +314,7 @@ io.on("connection", (socket) => {
             // Update when both join the game
             if(current_game.white && current_game.black){
                 io.to(id).emit("update-board")
+                await dc.update_game_colors(id, current_game.black, current_game.white)
             }else{
                 socket.emit("wait-for-enemy") // If enemy is not in game yet send waiting
             }
@@ -412,6 +414,33 @@ app.get("/find_game/:time", jwt_connector.authenticate_token, async (req, res) =
     }
 
     return res.status(200)
+})
+
+// Returning data for finished games
+app.get("/after_game_data/:game_id", async (req, res) => {
+    let result = await dc.get_after_game_data(req.params.game_id)
+    if(!result) return res.status(500).json({"error": "There is no game with given id"})
+
+    if(!result.game.finished) return res.status(500).json({"error": "This game is not finished"})
+
+    // Winner data
+    let winner = {
+        "id": result.winner.basic.id,
+        "username": result.winner.basic.username,
+        "elo": result.winner.basic.elo,
+        "image": result.winner.additional.profile_image_path,
+        "color": result.game.user1 == result.winner.basic.id ? result.game.user1_color : result.game.user2_color
+    }
+
+    // Loser data
+    let loser = {
+        "id": result.loser.basic.id,
+        "username": result.loser.basic.username,
+        "elo": result.loser.basic.elo,
+        "image": result.loser.additional.profile_image_path,
+        "color": result.game.user1 == result.loser.basic.id ? result.game.user1_color : result.game.user2_color
+    }
+    return res.status(200).json({game: result.game, winner: winner, loser: loser})
 })
 
 // Starting server that listens on given port

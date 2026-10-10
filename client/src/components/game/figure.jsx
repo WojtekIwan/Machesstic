@@ -26,6 +26,16 @@ import queen_black from "../../assets/queen_black.png"
 import king_white from "../../assets/king_white.png"
 import king_black from "../../assets/king_black.png"
 
+// Images for figure
+const images = {
+    "p_white": pawn_white, "p_black": pawn_black,
+    "b_white": bishop_white, "b_black": bishop_black,
+    "h_white": horse_white, "h_black": horse_black,
+    "r_white": rook_white, "r_black": rook_black,
+    "q_white": queen_white, "q_black": queen_black,
+    "k_white": king_white, "k_black": king_black,
+}
+
 // Figure component
 export default function Figure(props){
     // Neccesary variables
@@ -35,16 +45,6 @@ export default function Figure(props){
 
     const figureRef = useRef(null)
     const [drag, setDrag] = useState(false)
-
-    // Images for figure
-    const images = {
-        "p_white": pawn_white, "p_black": pawn_black,
-        "b_white": bishop_white, "b_black": bishop_black,
-        "h_white": horse_white, "h_black": horse_black,
-        "r_white": rook_white, "r_black": rook_black,
-        "q_white": queen_white, "q_black": queen_black,
-        "k_white": king_white, "k_black": king_black,
-    }
 
     // On loading page going to correct tile and settign up correct image path
     useEffect(() => {
@@ -138,4 +138,32 @@ export default function Figure(props){
             <img src={imagePath} className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}  alt={props.type}/>
         </div>
     )
+}
+
+// Sub-component (responsible for figure placeholder for game review)
+export function FigurePlaceholder(props){
+    let [x, setX] = useState(props.x)
+    let [y, setY] = useState(props.y)
+
+    const figureRef = useRef(null)
+
+    function setPosition(x, y){
+        setX(previous => x)
+        setY(previous => y)
+
+        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + x * 64}px`
+        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + y * 64}px`
+    }
+
+    useEffect(() => {
+        setPosition(props.x, props.y) 
+    }, [figureRef])
+    return <div>
+        <img className={"figure"} ref={figureRef} src={images[String(props.type).toLowerCase() + "_" + props.color]} />
+    </div>
+}
+
+// Mini figure icon for game history
+export function MiniFigurePicture(props){
+    return <img src={images[String(props.type).toLowerCase() + "_" + (props.color == "w" ? "white" : "black")]} />
 }

@@ -39,7 +39,7 @@ export const userContext = createContext() // User context with basic user data
 // Router for paths in main
 const router = createBrowserRouter([
   // Not protected routes - so they are visible to everyone
-  {path: "/", element: <Navigate to="/user" replace />}, // Navigating to user login automaticly
+  {path: "/", element: <Navigate to="/user/login" replace />}, // Navigating to user login automaticly
   
   {path: "/user/login", element: <Login/>}, // User login page
   // Protected routes - you need to be logged in
@@ -49,7 +49,11 @@ const router = createBrowserRouter([
        { path: "/user", element: <UserPage/>}, // User main page,
        { path: "/user/create_account", element: <CreateAccount/>}, // Account creation page
        { path: "/user/play", element: <Play/>}, // User play page
-       { path: "/user/profile", element: <Profile/>}, // User profile page
+       { 
+        path: "/user/profile/:username", 
+        element: <Profile/>, 
+        errorElement: <Error error={"User with given tag don`t exist!"} image={rageGif} image_alt={"chess rage gif"}/>
+       }, // User profile page
        { path: "/user/friends", element: <Friends/>}, // User friends page
        { path: "/about", element: <About/>}, // About page
        { path: "/game/:id", element: <Game/>}, // Single game page
@@ -64,7 +68,9 @@ const router = createBrowserRouter([
 
   {path: "/user/error", element: <Error error={"You are not logged in!"} additional={"To access this content you need to log in"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
 
-  {path: "/user/logout", element: <Error error={"You`ve been logged out`!"} additional={"Log in again!"} image={rageGif} image_alt={"chess rage gif"}/>} // You are not logged in
+  {path: "/user/logout", element: <Error error={"You`ve been logged out`!"} additional={"Log in again!"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
+
+  {path: "/user/404", element: <Error error={"This user dosen`t exist!"} additional={"Try checking for spelling mistakes"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
 ])
 
 // Interceptor (if user is not authenticeted redirect him to login page)
@@ -96,7 +102,8 @@ function MainLayout(){
     elo: 0,
     creation_date: null, 
     profile_note: null, 
-    profile_picture: null
+    profile_picture: null,
+    maximal_elo: null
   })
 
   const [loading, setLoading] = useState(true) // Use state for loading data from server
@@ -130,7 +137,8 @@ function MainLayout(){
         elo: res.data.elo,
         date: res.data.date, 
         profile_note: res.data.profile_note, 
-        profile_picture: res.data.profile_image_path
+        profile_picture: res.data.profile_image_path,
+        maximal_elo: res.data.maximal_elo
       }))
 
       if(!socket.connected) socket.connect() // Reconnect if needed

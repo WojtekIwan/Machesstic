@@ -128,7 +128,8 @@ user_router.get("/get_user_full_data", jwt_connector.authenticate_token, async (
         "elo": req.elo,
         "date": result["basic"]["creation_date"], 
         "profile_image_path": result["additional"]["profile_image_path"], 
-        "profile_note": result["additional"]["profile_note"]
+        "profile_note": result["additional"]["profile_note"],
+        "maximal_elo": result["additional"]["maximal_elo"]
     })
 })
 
@@ -220,4 +221,27 @@ user_router.post("/refresh_user_tokens", jwt_connector.authenticate_token, async
     return res.status(200).json({message: "Refresh of tokens was succesfull"})
 })
 
+// get user basic data for profile
+user_router.get("/get_other_user_data/:username", jwt_connector.authenticate_token, async (req, res) => {
+    let result = await dc.get_id_by_username(req.params.username)
+    let data = await dc.get_user_additional_data(result.id)
+
+    // Sending data to user in JSON with necessary data
+    return res.status(200).json({
+        "id": data["basic"]["id"],
+        "username": data["basic"]["username"],
+        "elo": data["basic"]["elo"],
+        "date": data["basic"]["creation_date"],
+        "date": data["basic"]["creation_date"], 
+        "profile_picture": data["additional"]["profile_image_path"], 
+        "profile_note": data["additional"]["profile_note"],
+        "maximal_elo": data["additional"]["maximal_elo"]
+    })
+})
+
+// Get game stats (game history) for given user
+user_router.get("/game_stats/:username", jwt_connector.authenticate_token, async (req, res) => {
+    let result = await dc.get_game_stats(req.params.username)
+    return res.status(200).json(result)
+})
 export default user_router

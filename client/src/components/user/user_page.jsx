@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
 
 // Main user page component
 export default function UserPage(){
-    const user = useContext(userContext) // Basic user data
+    const {user} = useContext(userContext) // Basic user data
 
     return (   
         <div className="user_page">

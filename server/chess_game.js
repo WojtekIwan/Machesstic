@@ -147,12 +147,17 @@ export class ChessGame{
             // Move was made (this is for pawns, and casteling)
             this.board[x][y].first_move = false 
 
-            this.moves_history += this.board[x][y].color + this.board[x][y].name + String(x) + String(y) + "|" // Update the history
+            this.moves_history += this.turn[0] + this.board[x][y].name + String(pom_x) + String(old_y) + String(x) + String(y) + "|" // Update the history
             this.turn = this.turn == "white" ? "black" : "white"
 
+            // Looking out for game end
+            let checkmate = this.is_checkmate(this.turn)
+            let stalemate = this.is_stalemate(this.turn)
+
+            if(checkmate || stalemate) this.moves_history = this.moves_history.slice(0, -1) // If end removing unnecesary '|'
             this.print_chess_board()
 
-            return {can_move: true, checkmate: this.is_checkmate(this.turn), stalemate: this.is_stalemate(this.turn)}
+            return {can_move: true, checkmate: checkmate, stalemate: stalemate}
         }else{
             // You can`t make this move
             return {can_move: false}

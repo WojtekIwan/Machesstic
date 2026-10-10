@@ -97,8 +97,8 @@ export default class DatabaseConnector{
                 await this.pool.query("insert into user_basic_info values (?, ?, ?, ?, ?, ?)", 
                     [rand_id_for_basic, username, email, hashed_password, account_creation_data, 100])
 
-                await this.pool.query("insert into user_additional_info values (?, ?, ?, ?)", 
-                    [rand_id_for_additional, rand_id_for_basic, '', ''])
+                await this.pool.query("insert into user_additional_info values (?, ?, ?, ?, ?)", 
+                    [rand_id_for_additional, rand_id_for_basic, '', '', 100])
             }catch(e){
                 error = true
             }     
@@ -169,6 +169,11 @@ export default class DatabaseConnector{
         return result[0][0]
     }
 
+    async get_id_by_username(username){
+        let result = await this.pool.query(`Select id from user_basic_info where user_basic_info.username = ?;`, [username])
+        return result[0][0]
+    }
+
     // Return row with given user id from basic info and additional info
     async get_user_additional_data(user_id){
         let result1 = await this.pool.query(`Select * from user_basic_info where user_basic_info.id = ?;`, [user_id])
@@ -202,15 +207,52 @@ export default class DatabaseConnector{
         return result
     }
 
+    // getting games stats for user (number of games played, won, last games etc)
+    async get_game_stats(username){
+        let pom = await this.get_id_by_username(username)
+        let id = pom.id
+
+        let games = await this.pool.query("SELECT chess_games.*, white.username AS white_username, black.username AS black_username FROM chess_games LEFT JOIN user_basic_info white ON chess_games.user1 = white.id LEFT JOIN user_basic_info black ON chess_games.user2 = black.id WHERE chess_games.user1 = ? OR chess_games.user2 = ?;", [id, id])
+
+        let game_data = {
+            "games_won": 0,
+            "games_lost": 0,
+            "games_draw": 0,
+            "all_games":  games[0].length,
+        }
+
+        for(let i = 0; i < games[0].length; i++){
+            // If game dosent have winner its draw
+            if(!games[0][i].winner){
+                game_data["games_draw"] += 1
+                continue
+            }
+
+            // In other case increase win or lose
+            game_data[games[0][i].winner == id ? "games_won" : "games_lost"] += 1
+            console.log(games[0][i])
+        }
+
+        return {"basic_data": game_data,"games": games[0]}
+    }
+
     // **********************************************************************************
     //                                    Game 
     // **********************************************************************************
     async create_game(user_id1, user_id2){
         let game_id = crypto.randomUUID()
 
-        // Dodać datę rozpoczęcia, timery 
-        let result = await this.pool.query(`insert into chess_games values (?,?,?,"","",0, "")`, [game_id, user_id1, user_id2])
+        let result = await this.pool.query(`insert into chess_games values (?,?, "",?, "","","",0, "")`, [game_id, user_id1, user_id2])
         return {code: 200, game_id: game_id}
+    }
+
+    async update_game_colors(game_id, black, white){
+        let game = await this.get_game(game_id)
+
+        let user1_color = game.user1 == black ? "black" : "white"
+        let user2_color = game.user2 == white ? "white" : "black"
+
+        await this.pool.query(`update chess_games set chess_games.user1_color=?, chess_games.user2_color=? where chess_games.id=?`, [ user1_color, user2_color, game_id])
     }
 
     async get_game(game_id){
@@ -223,7 +265,13 @@ export default class DatabaseConnector{
 
     // Updating elo by user id
     async update_elo(user_id, elo_gain){
+        let data = await this.get_user_additional_data(user_id)
         await this.pool.query("update user_basic_info set user_basic_info.elo=user_basic_info.elo+? where user_basic_info.id=?", [elo_gain, user_id])
+        
+        // Elo is higher after this game. Update maximal elo
+        if(data.additional.maximal_elo < elo_gain + data.basic.elo){
+            await this.pool.query("update user_additional_info set user_additional_info.maximal_elo=?", [elo_gain + data.basic.elo])
+        }
     }
 
     // Endgame - after game database operations
@@ -235,7 +283,6 @@ export default class DatabaseConnector{
             // Determing winner and loser
             let w = game.user1 == winner ? game.user1 : game.user2
             let l = game.user1 != winner ? game.user1 : game.user2
-            console.log(game, w, l)
 
             // Update their elo
             await this.update_elo(w, elo_gained)
@@ -246,6 +293,27 @@ export default class DatabaseConnector{
 
     // Finishing game (it`s finished but making sure twice)
     async set_finished(game_id){
-        let result = await this.pool.query("Update chess_games SET finished=? WHERE id=?", [true, game_id])
+        await this.pool.query("Update chess_games SET finished=? WHERE id=?", [true, game_id])
+    }
+
+    // **********************************************************************************
+    //                                  After game 
+    // **********************************************************************************
+    
+    async get_after_game_data(game_id){
+        let game = await this.get_game(game_id)
+        if(!game) return false
+
+        let winner = await this.get_user_additional_data(game.winner)
+        let loser = await this.get_user_additional_data(game.user1 == game.winner ? game.user2 : game.user1)
+
+        return {
+            game: {
+                ...game,
+                game_start: "RHBQKBHRPPPPPPPP................................PPPPPPPPRHBQKBHR"
+            }, 
+            winner: winner, 
+            loser: loser
+        }
     }
 }

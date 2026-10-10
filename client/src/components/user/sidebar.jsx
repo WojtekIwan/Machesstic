@@ -17,7 +17,7 @@ import user_default from "../../assets/user_default.png"
 
 // Siedbar component
 export default function SideBar(){
-    const user = useContext(userContext) // Variable that stores basic user info
+    const {user} = useContext(userContext) // Variable that stores basic user info
     const socket = useContext(socketContext) // Connection with server by socket
     
     // Logging out when user clicks Link
@@ -40,7 +40,7 @@ export default function SideBar(){
             <Link className="link_to_page" to={"/about"}>About</Link>
 
             {/* Link for user profile (img has this date thing so react would update it on change) */}
-            <Link className="profile" to={"/user/profile"}>
+            <Link className="profile" to={`/user/profile/${user.username}`}>
                 <img src={`http://localhost:3000/uploads/${user.profile_picture}?t=${new Date().getTime()}`} onError={e => {e.target.src = user_default}} alt="user deafult image" />
                 <div>
                     <h2>{user.username}</h2>
