@@ -51,6 +51,7 @@ export default function Profile(){
         // Getting games data for given user
         axios.get(`http://localhost:3000/user/game_stats/${params.username}`, {withCredentials: true}).then(res => {
             setUserGames(previous => res.data)
+            console.log(res.data)
         }).catch(error => {
             navigate("/user/404")
         })
@@ -106,7 +107,7 @@ export default function Profile(){
                         <div className="player_game_info">
                             <div><h3>{userProfile.elo}</h3><p>ELO RATING</p></div>
                             
-                            <div><h3>{userGames.basic_data.all_games}</h3><p>TOTAL GAMES</p></div>
+                            <div><h3>{userGames.basic_data ? userGames.basic_data.all_games : 0}</h3><p>TOTAL GAMES</p></div>
 
                             <div><h3>{userProfile.maximal_elo}</h3><p>HIGHEST RAITING</p></div>
                         </div>
@@ -114,17 +115,17 @@ export default function Profile(){
                         {/* Ratios for player (all games must be higher then zero) */}
                         {userGames.basic_data &&  userGames.basic_data.all_games != 0 ? 
                         <div className="player_ratios">
-                            <div><h3>{Math.round(userGames.basic_data.games_won / userGames.basic_data.all_games) * 100}%</h3><p>WINS</p></div>
+                            <div><h3>{Math.round(userGames.basic_data.games_won * 10000 / userGames.basic_data.all_games) / 100}%</h3><p>WINS</p></div>
 
-                            <div><h3>{Math.round(userGames.basic_data.games_draw / userGames.basic_data.all_games) * 100}%</h3><p>DRAWS</p></div>
+                            <div><h3>{Math.round(userGames.basic_data.games_draw * 10000 / userGames.basic_data.all_games) / 100}%</h3><p>DRAWS</p></div>
 
-                            <div><h3>{Math.round(userGames.basic_data.games_lost / userGames.basic_data.all_games) * 100}%</h3><p>LOSES</p></div>
+                            <div><h3>{Math.round(userGames.basic_data.games_lost * 10000 / userGames.basic_data.all_games) / 100}%</h3><p>LOSES</p></div>
                         </div> : <div className="player_ratios"></div>}
                         
 
-                        {/* Playes game history (not ready yet) */}
+                        {/* Playes game history */}
                         <div className="player_game_history">
-                        {userGames.games && userGames.basic_data.all_games != 0 ? 
+                        {userGames.games && userGames.basic_data && userGames.basic_data.all_games != 0 ? 
                             <div>
                                 {userGames.games.map(game => {
                                     return <div key={game.id}>

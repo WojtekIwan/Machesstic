@@ -79,7 +79,7 @@ export default function Game(){
 
     // Setting up user data and joining a game
     let params = useParams() // Getting params from url (game id is crucial here)
-    const user = useContext(userContext)
+    const {user} = useContext(userContext)
 
     // Join game as soon as user change
     useEffect(() => {

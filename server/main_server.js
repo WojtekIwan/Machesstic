@@ -12,6 +12,13 @@ import * as jwt_connector from "./jwt.js"
 import path from "path"
 import process from "process"
 
+// import path from "path";
+import { fileURLToPath } from "url";
+
+// 1. Definiujemy brakujące w ES Modules __filename i __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -190,7 +197,8 @@ io.on("connection", (socket) => {
                 let black = active_players.get(game.black)
 
                 // Depending on whose turn it is update win screen
-                if(game.turn == "black"){
+                let winner_color = game.chessboard.turn == "white" ? "black" : "white"
+                if(winner_color == "white"){
                     white.socket.emit("finish", reason, 1, game.elo_gain)
                     black.socket.emit("finish", reason, 0, black.elo - game.elo_gain >= 0 ? -game.elo_gain : -(black.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
                 }else{
@@ -199,7 +207,6 @@ io.on("connection", (socket) => {
                 }
 
                 // Update game database
-                let winner_color = game.chessboard.turn == "white" ? "black" : "white"
                 await dc.endgame(player.game_id, game[winner_color], game.chessboard.moves_history, game.elo_gain, "checkmate")
             }
 
@@ -442,6 +449,14 @@ app.get("/after_game_data/:game_id", async (req, res) => {
     }
     return res.status(200).json({game: result.game, winner: winner, loser: loser})
 })
+
+// This small section is for serving static files (for react)
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get('*splat', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Starting server that listens on given port
 server.listen(process.env.SERVER_PORT, (e) => {
