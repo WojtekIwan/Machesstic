@@ -16,12 +16,12 @@ export default class EmailSender{
     // Creating transport (connecting with email to send messages)
     constructor(){
         this.transporter = nodemailer.createTransport({
-            host: process.env.IMAP_HOST,
+            host: process.env.SMTP_HOST,
             secure: true,
-            port: process.env.IMAP_PORT,
+            port: process.env.SMTP_PORT,
             auth: {
-                user: process.env.IMAP_EMAIL,
-                pass: process.env.IMAP_PASSWORD
+                user: process.env.SMTP_EMAIL,
+                pass: process.env.SMTP_PASSWORD
             }
         })
     }
