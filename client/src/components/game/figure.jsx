@@ -39,19 +39,14 @@ const images = {
 // Figure component
 export default function Figure(props){
     // Neccesary variables
-    let [x, setX] = useState(props.x)
-    let [y, setY] = useState(props.y)
-    let [imagePath, setImagePath] = useState(null)
-
     const figureRef = useRef(null)
     const [drag, setDrag] = useState(false)
 
     // On loading page going to correct tile and settign up correct image path
+    const firstRunRef = useRef(true)
     useEffect(() => {
-        go_back()
-        // Setting up image for figure
-        setImagePath(p => images[String(props.type).toLowerCase() + "_" + props.color])
-    }, [imagePath])
+        update_position(props.x, props.y)
+    }, [props.x, props.y])
 
     // Adding listeners for window
     useEffect(() => {
@@ -84,7 +79,7 @@ export default function Figure(props){
 
     // Start dragging figure
     function start_dragging_figure(e){
-        figureRef.current = e.target // Setting current
+        // figureRef.current = e.target // Setting current
         setDrag(p => true) // figure is dragged
         figureRef.current.style.zIndex = 999 // Setting up big index (so figure is always on top)
 
@@ -93,23 +88,20 @@ export default function Figure(props){
             "figure": figureRef.current,
             "go_back": go_back,
             "update_pos": update_position, 
-            "old_pos": {"x": x, "y": y}
+            "old_pos": {"x": props.x, "y": props.y}
         })
         // Setting up drag so possible moves are displayed
-        props.drag(x, y)
+        props.drag(props.x, props.y)
     }
 
     // Updating figure (going back to previous position - x and y don`t need to be changed)
     function go_back(){
-        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + x * 64}px`
-        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + y * 64}px`
+        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + props.x * 64}px`
+        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + props.y * 64}px`
     }
 
     // Updating position to given new x and y
     function update_position(new_x, new_y){
-        setX(x => new_x)
-        setY(y => new_y)
-
         // I am not using go back because x and y is not updated yet
         figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + new_x * 64}px`
         figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + new_y * 64}px`
@@ -134,8 +126,8 @@ export default function Figure(props){
 
     // Rendering figure
     return (
-        <div >
-            <img src={imagePath} className={props.possible_move ? "figure can_take" : "figure"} onDragStart={(e) => e.preventDefault()} ref={figureRef} onMouseDown={(e) => start_dragging_figure(e)}  alt={props.type}/>
+        <div ref={figureRef} className={props.possible_move ? "figure can_take" : "figure"} onMouseDown={(e) => start_dragging_figure(e)}onDragStart={(e) => e.preventDefault()}>
+            <img src={images[String(props.type).toLowerCase() + "_" + props.color]} alt={props.color}/>
         </div>
     )
 }

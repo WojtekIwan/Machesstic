@@ -46,10 +46,10 @@ export default function Game(){
     const backRef = useRef(null)
 
     const [board, setBoard] = useState(null)
-    const [color, setColor] = useState("")
+    const colorRef = useRef("")
 
     // User timers (for player and enemy)
-    const [timers, setTimers] = useState({"white": 600, "black": 600})
+    const [timers, setTimers] = useState({"white": 15, "black": 15})
     let intervalId = null // Timer interval
 
     const [promotion, setPromotion] = useState(false)
@@ -70,7 +70,7 @@ export default function Game(){
         for(let i = 0; i < board_length; i++){
             tab.push([])
             for(let j = 0; j < board_length; j++){
-                tab[i].push({x: i, y: j, possible_move: false})
+                tab[i].push({x: j, y: i, possible_move: false})
             }
         }
         return tab
@@ -79,7 +79,7 @@ export default function Game(){
 
     // Setting up user data and joining a game
     let params = useParams() // Getting params from url (game id is crucial here)
-    const {user} = useContext(userContext)
+    const {user, fetch_data} = useContext(userContext)
 
     // Join game as soon as user change
     useEffect(() => {
@@ -93,19 +93,35 @@ export default function Game(){
         currentFigureRef.current = currentFigure;
     }, [currentFigure]);
 
+    let [figures, setFigures] = useState([])
     useEffect(() => {
         // Updating board (setting up figure positions etc)
         function update_board(){
+            console.log("isughdsugyrgierhgierhiug")
             socket.emit("get-game-data", user.id)
-            setBoard(p => board) // Another call of setBoard() to update the figures
+            // setBoard(p => board) // Another call of setBoard() to update the figures
             setPromotion(p => null) // Reset promotion varible
         }
         
         // Updating board data
         function get_board_data(color, board, enemy_username, enemy_elo, enemy_image){
-            setBoard(p => board)
-            setColor(p => color) // User color
+            setBoard(previous =>  [...board])
 
+            setFigures(previous => {
+                let pom = []
+                for(let i = 0; i < board_length; i++){
+                    for(let j = 0; j < board_length; j++){
+                        if(board[j][i].name != "."){
+                            pom.push({...board[j][i], "x": j, "y": i })
+                        }
+                    }
+                }
+                return pom
+            })
+            // Cleaning up posssible moves after a move
+            clear_possible_moves()
+
+            colorRef.current = color // User color
             // Setting up enemy data
             setEnemy({
                 username: enemy_username,
@@ -123,7 +139,17 @@ export default function Game(){
             // If timer is not set another one
             if(intervalId == null){
                 intervalId = setInterval(() => {
-                    setTimers(previous => ({...previous, [whose]: previous[whose] - 1})) // Updating correct timer depending of color
+                    let timers_after_updated =  timersNew
+                    timers_after_updated[whose] -= 1
+                    
+                    setTimers(previous => ({
+                        "black": timers_after_updated["black"],
+                        "white": timers_after_updated["white"]
+                    })) // Updating correct timer depending of color
+
+                    if(whose == colorRef.current && Number(timers_after_updated[whose]) <= 0){
+                        socket.emit("timeout-endgame", user.id) // Emit timeout endgame
+                    }
                 }, 1000)
             }else{
                 // Clearing interval and creating new one
@@ -134,18 +160,12 @@ export default function Game(){
         }
         
         // Making figure move and clearing old interval
-        function make_move(can_move, new_x, new_y){
+        function make_move(can_move){
             currentFigureRef.current.figure.style.pointerEvents = "all"
 
-            // If figure moved clear current interval. If not figure go back
-            if(can_move){
-                currentFigureRef.current.update_pos(new_x, new_y)
-                clearInterval(intervalId)
-                intervalId = null
-            }else{
-                currentFigureRef.current.go_back()
-            }
-
+            // If figure cant move go back
+            if(!can_move) currentFigureRef.current.go_back()
+            
             // Cleaning up posssible moves after a move
             clear_possible_moves()
         }
@@ -164,7 +184,17 @@ export default function Game(){
             setFinished({"reason": reason, "won": won, "reward": eloGained})
             clearInterval(intervalId)
             intervalId = null
-            user.fetch_data() // Fetching after winning so data is updated
+            fetch_data() // Fetching after winning so data is updated
+        }
+
+        // Player gives up
+        function give_up(){
+
+        }
+
+        // Player propose a draw
+        function draw(){
+
         }
 
         // Updating promotion if possible
@@ -272,7 +302,7 @@ export default function Game(){
                         <p>{enemy.elo}</p>
                     </div>
                 </div>
-                <span>{timers[enemy.color] != null ? <p style={{backgroundColor: enemy.color, color: color}}>{Math.floor(timers[enemy.color] / 60)} : {Math.round(timers[enemy.color] % 60) <= 9 ? "0" + Math.round(timers[enemy.color] % 60) : Math.round(timers[enemy.color] % 60)}</p> : ""}</span>
+                <span>{timers[enemy.color] != null ? <p style={{backgroundColor: enemy.color, color: colorRef.current}}>{Math.floor(timers[enemy.color] / 60)} : {Math.round(timers[enemy.color] % 60) <= 9 ? "0" + Math.round(timers[enemy.color] % 60) : Math.round(timers[enemy.color] % 60)}</p> : ""}</span>
             </div>
 
             {/* Generating chess board */}
@@ -281,9 +311,9 @@ export default function Game(){
                     {visualBoard?.map((row, index) => {
                         let notations = "ABCDEFGH" // Side numeration
                         return <tr key={index}>{row.map((tile, index2) => {
-                            let x2 = color == "black" ? 7 - tile.x : tile.x // Reversing x depending on color
+                            let x2 = colorRef.current == "black" ? 7 - tile.x : tile.x // Reversing x depending on color
 
-                            let notation_x = tile.x == 7 ? notations.charAt(color == "black" ? 7 - tile.y : tile.y) : ""
+                            let notation_x = tile.x == 7 ? notations.charAt( colorRef.current == "black" ? 7 - tile.y : tile.y) : ""
                             let notation_y = tile.y == 7 ? 7 - tile.x + 1 : 7 - x2 + 1 
 
                             // Generating invidual tiles for given cords
@@ -295,25 +325,19 @@ export default function Game(){
 
             {/* Promotion */}
             {promotion ? <div id="promotion" style={{left: tableRef.current.getBoundingClientRect().left, top: tableRef.current.getBoundingClientRect().top}}>
-                <img src={images["h_" + color]} alt="horse for promotion" onClick={() => choose_promotion("h")} />
-                <img src={images["b_" + color]} alt="bishop for promotion" onClick={() => choose_promotion("b")} />
-                <img src={images["r_" + color]} alt="rook for promotion" onClick={() => choose_promotion("r")} />
-                <img src={images["q_" + color]} alt="queen for promotion" onClick={() => choose_promotion("q")} />
+                <img src={images["h_" + colorRef.current]} alt="horse for promotion" onClick={() => choose_promotion("h")} />
+                <img src={images["b_" + colorRef.current]} alt="bishop for promotion" onClick={() => choose_promotion("b")} />
+                <img src={images["r_" + colorRef.current]} alt="rook for promotion" onClick={() => choose_promotion("r")} />
+                <img src={images["q_" + colorRef.current]} alt="queen for promotion" onClick={() => choose_promotion("q")} />
             </div> : <></>}
 
             {/* Generating figures for board */}
-            { board != null ? 
-            board?.map((row, x) => {
-                return <div key={x}>{row?.map((element, y) => {
-                    if(element.name != "."){
-                        let x2 = color == "black" ? 7 - x : x  // Reversing for black
-                        
-                        // Generating figure component
-                        return <Figure key={x * board_length + y} x={x2} y={y} type={element.name} possible_move={visualBoard[x2][y].possible_move} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
-                    }
-                })}
-                </div>
-            }) : <div></div>}  
+            { figures.map((element) => {
+                let y = element.y
+                let x =  colorRef.current == "black" ? 7 - element.x : element.x  // Reversing for black
+                // Generating figure component
+                return <Figure key={element.id} x={x} y={y} type={element.name} possible_move={visualBoard[x][y].possible_move} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
+            })}
 
             {/* Generating user profile (bottom bar with username, elo and profile picture) */}
             <div id="your_profile">
@@ -325,11 +349,11 @@ export default function Game(){
                         <p>{user.elo}</p>
                     </div>
                 </div>
-                <span>{timers[color] != null ? <p style={{backgroundColor: color, color: enemy.color}}>{Math.floor(timers[color] / 60)} : {Math.round(timers[color] % 60) <= 9 ? "0" + Math.round(timers[color] % 60) : Math.round(timers[color] % 60)}</p> : ""}</span>
+                <span>{timers[colorRef.current] != null ? <p style={{backgroundColor: colorRef.current, color: enemy.color}}>{Math.floor(timers[colorRef.current] / 60)} : {Math.round(timers[colorRef.current] % 60) <= 9 ? "0" + Math.round(timers[colorRef.current] % 60) : Math.round(timers[colorRef.current] % 60)}</p> : ""}</span>
             </div>
 
             {/* If finished display endgame component */}
-            {finished ? <Endgame won={finished.won} reason={finished.reason} elo={user.elo} reward={finished.reward}></Endgame> : <></>}
+            {finished ? <Endgame won={finished.won} reason={finished.reason} elo={user.elo - finished.reward} reward={finished.reward}></Endgame> : <></>}
         </div>
     )
 }

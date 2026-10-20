@@ -23,7 +23,7 @@ export class ChessGame{
             for(let j = 0; j < this.board_length; j++){
                 let f = pom.charAt(i * this.board_length + j)
                 if(f != "."){
-                    let figure = {name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: [], first_move: true, en_passant: false}
+                    let figure = {id: String(i) + String(j) + pom.charAt(i * this.board_length + j) ,name: pom.charAt(i * this.board_length + j), color: i > 3 ? "white": "black", possible_moves: [], first_move: true, en_passant: false}
                     
                     // Setting up a king for black and white
                     if(figure.name == "K"){

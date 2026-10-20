@@ -164,7 +164,7 @@ io.on("connection", (socket) => {
 
         x = color == "black" ? 7 - x : x // Reversing for black
         let move = game.chessboard.move_figure(color, x, y, old.x, old.y) // Making a move!
-        socket.emit("make-move", move.can_move, x, y)
+        socket.emit("make-move", move.can_move)
 
         // If promotion is possible send signal to client (the UI on client site will be set)
         if(!move.can_move && move.can_promote){
@@ -213,6 +213,37 @@ io.on("connection", (socket) => {
             io.to(player.game_id).emit("update-board")
         }  
     })
+
+    // Player time has run out so he loses the game
+    socket.on("timeout-endgame", async (player_id) => {
+        endgame(player_id, "timeout")
+    })
+
+    // Instead of writing endgame multiple times one function does it all
+    async function endgame(player_id, reason){
+        let player = active_players.get(player_id) // Getting player reference
+        let database_game = await dc.get_game(player.game_id) // Getting a reference to game in database
+
+        if(!database_game || database_game.finished) return // The game is already finished
+
+        let game = current_games.get(player.game_id)
+
+        let winner_color = player.color == "black" ? "white" : "black"
+
+        let black = active_players.get(game["black"])
+        let white = active_players.get(game["white"])
+
+        if(winner_color == "white"){
+            white.socket.emit("finish", "By " + reason, 1, game.elo_gain)
+            black.socket.emit("finish", "By " + reason, 0, black.elo - game.elo_gain >= 0 ? -game.elo_gain : -(black.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
+        }else{
+            black.socket.emit("finish", "By " + reason, 1, game.elo_gain)
+            white.socket.emit("finish", "By " + reason, 0, white.elo - game.elo_gain >= 0 ? -game.elo_gain : -(white.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
+        }
+
+        // Update game database
+        await dc.endgame(player.game_id, game[winner_color], game.chessboard.moves_history, game.elo_gain, reason)
+    }
 
     // On disconnect remove player from active players and eventually leave all games
     socket.on("disconnect", async () => {

@@ -124,8 +124,8 @@ user_router.get("/get_user_full_data", jwt_connector.authenticate_token, async (
     // Sending whole data to users
     return res.status(200).json({
         "id": req.user_id,
-        "username": req.username,
-        "elo": req.elo,
+        "username": result["basic"]["username"],
+        "elo": result["basic"]["elo"],
         "date": result["basic"]["creation_date"], 
         "profile_image_path": result["additional"]["profile_image_path"], 
         "profile_note": result["additional"]["profile_note"],

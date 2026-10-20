@@ -292,6 +292,8 @@ export default class DatabaseConnector{
     }
 
     // Finishing game (it`s finished but making sure twice)
+
+    // Something wrong here check it asap
     async set_finished(game_id){
         await this.pool.query("Update chess_games SET finished=? WHERE id=?", [true, game_id])
     }
