@@ -1,4 +1,6 @@
+<p align="center">
 <img src="client/src/assets/logo.png" alt="drawing" width="300" style="display: block; margin: auto" />
+</p>
 <p align="center">
   <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
