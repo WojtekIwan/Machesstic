@@ -21,7 +21,7 @@ export async function create_tokens(user_id){
         let user_data = await dc.get_user_data_by_id(user_id) // Get user data by id
         
         // Creating access and refresh token
-        let jwt_access = jwt.sign({"user_id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15s"})
+        let jwt_access = jwt.sign({"user_id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
         let jwt_refresh = jwt.sign({"user_id": user_id, "username": user_data.username, "elo": user_data.elo}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "7d"})
             
         if(!jwt_exist){

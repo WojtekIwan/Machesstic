@@ -1,0 +1,85 @@
+// +---------------------------------------------------------------------------------+
+// |                               SIDEBAR STYLES                                    |
+// +---------------------------------------------------------------------------------+
+
+@use "./varibles" as *; // Variables import
+
+// Side navigation styles
+nav {
+  background-color: $backgroundColorSecondary;
+  width: 13rem;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+  // Logo at sidebar
+  .logo {
+    background-color: $backgroundColor;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 3rem;
+    margin-top: 1rem;
+  }
+
+  // Profile
+  .profile {
+    @include display_flex(center, center, row);
+    background-color: $backgroundColor;
+    text-decoration: none;
+    width: 10rem;
+
+    img {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      padding: 0.2rem;
+
+      background-color: $additionalPurple;
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    div {
+      @include display_flex(center, center, column);
+      padding-right: 0.5rem;
+
+      h3 {
+        @include h1_to_h3($h3Size);
+        margin-top: 0rem;
+        margin-bottom: 0rem;
+      }
+
+      p {
+        @include paragraph();
+        margin-top: 0rem;
+        margin-bottom: 0rem;
+      }
+    }
+  }
+
+  .link_to_page {
+    @include paragraph();
+    text-align: left;
+    width: 10rem;
+    padding-left: 1rem;
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: transform 0.1s ease-in-out;
+
+    &:hover {
+      color: $additionalPink;
+    }
+  }
+
+  // Log out button
+  .log_out {
+    @include button($additionalPurple, $fontColor);
+    @include display_flex(center, center, row);
+    text-decoration: none;
+    margin-bottom: 1rem;
+    width: 10rem;
+  }
+}

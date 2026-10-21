@@ -244,4 +244,14 @@ user_router.get("/game_stats/:username", jwt_connector.authenticate_token, async
     let result = await dc.get_game_stats(req.params.username)
     return res.status(200).json(result)
 })
+
+// Submiting error from form
+user_router.post("/submit_error", jwt_connector.authenticate_token, async (req, res) => {
+    let response_from_email = await es.sendErrorMail(req.username, req.body.error_message)
+    if(!response_from_email.send){
+        return res.status(400).json({validated:false, message: "Sorry but we can`t send error message email"})
+    } 
+    return res.status(200).json({validated: true, message: "Your message was succesfully send!"})
+})
+
 export default user_router

@@ -3,7 +3,7 @@
 // ****************************************************************************
 $fontColor: #e6ede6;
 $backgroundColor: #212121;
-$backgroundColorSecondary: #323232;  
+$backgroundColorSecondary: #2c2c2c;  
 $additionalPink: #FE66C4;
 $additionalPurple: #8B53FF;
 
@@ -58,7 +58,9 @@ $paragraphSize: 0.9rem;
     font-family: $textFont;
     font-size: $paragraphSize;
     text-decoration: none;
-    margin: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
 }
 
 @mixin h1_to_h3($size){
@@ -75,6 +77,7 @@ $paragraphSize: 0.9rem;
     background-color: $backgroundColor;
     color: $fontColor;
     font-family: $textFont;
+    font-weight: bolder;
 
     border: none;
     border-radius: 0.25rem;
@@ -111,4 +114,57 @@ $paragraphSize: 0.9rem;
     color: $fontColor;
     font-family: $textFont;
     font-size: $paragraphSize;
+}
+
+
+// New mixnins (for styles clean up)
+
+@mixin display_flex($align, $justify, $direction){
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+}
+
+@mixin h2(){
+    font-size: $h2Size;
+    color: $fontColor;
+    font-family: $textFont;
+}
+
+@mixin h3(){
+    font-size: $h3Size;
+    color: $fontColor;
+    font-family: $textFont;
+}
+
+@mixin popup_info(){
+    position: absolute;
+    width: 20rem;
+    height: 12rem;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: $backgroundColorSecondary;
+    @include display_flex(center, center, row);
+
+    p{
+        @include paragraph();
+    }
+
+    button{
+        position: absolute;
+        color: $fontColor;
+        background: #ffffff00;
+        border: none;
+        font-size: $h3Size;
+        font-family: $textFont;
+        left: 90%;
+        top: 5%;
+
+        &:hover{
+            cursor: pointer;
+            color: $additionalPink;
+        }
+    }
 }

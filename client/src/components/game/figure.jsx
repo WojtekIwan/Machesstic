@@ -79,7 +79,6 @@ export default function Figure(props){
 
     // Start dragging figure
     function start_dragging_figure(e){
-        // figureRef.current = e.target // Setting current
         setDrag(p => true) // figure is dragged
         figureRef.current.style.zIndex = 999 // Setting up big index (so figure is always on top)
 

@@ -43,7 +43,7 @@ export default function SideBar(){
             <Link className="profile" to={`/user/profile/${user.username}`}>
                 <img src={`http://localhost:3000/uploads/${user.profile_picture}?t=${new Date().getTime()}`} onError={e => {e.target.src = user_default}} alt="user deafult image" />
                 <div>
-                    <h2>{user.username}</h2>
+                    <h3>{user.username}</h3>
                     <p>Elo raiting: {user.elo}</p>
                 </div>
             </Link>

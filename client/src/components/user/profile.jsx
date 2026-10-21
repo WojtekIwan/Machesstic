@@ -129,7 +129,7 @@ export default function Profile(){
                             <div>
                                 {userGames.games.map(game => {
                                     return <div key={game.id}>
-                                        <div className={userProfile.id == game.winner ? "plus" : "minus"}>{userProfile.id == game.winner ? "+" : "-"}</div>
+                                        <div className={game.winner == "" ? "dot" : (userProfile.id == game.winner ? "plus" : "minus")}>{game.winner == "" ? "*" : userProfile.id == game.winner ? "+" : "-"}</div>
 
                                         <div className="players">
                                             <div>

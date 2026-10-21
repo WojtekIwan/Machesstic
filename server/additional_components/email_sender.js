@@ -7,7 +7,7 @@
 // Basic imports
 import nodemailer from "nodemailer"
 import { configDotenv } from "dotenv"
-configDotenv()
+configDotenv({path: "./.env"})
 
 import * as auth_consts from "./auth_consts.js" // Basic consts for auth
 
@@ -41,7 +41,7 @@ export default class EmailSender{
         // Sending mail for given user
         try{
             const info = await this.transporter.sendMail({
-                from: `Machesstic <${process.env.IMAP_EMAIL}>`,
+                from: `Machesstic <${process.env.SMTP_EMAIL}>`,
                 to: mail,
                 subject: "Machesstic verification code",
                 html: html_for_verification
@@ -51,5 +51,24 @@ export default class EmailSender{
         }
 
         return {send: true, code: code}
+    }
+
+    // Send error mail
+    async sendErrorMail(username, error){
+        // Generating a code for user verification
+        let html_for_error = auth_consts.error_email(username, error)
+        // Sending mail for given user
+        try{
+            const info = await this.transporter.sendMail({
+                from: `Machesstic <${process.env.SMTP_EMAIL}>`,
+                to: process.env.ERROR_EMAIL_RECIVER,
+                subject: "Machesstic error message",
+                html: html_for_error
+            })
+        }catch(e){
+            return {send: false}
+        }
+
+        return {send: true}
     }
 }

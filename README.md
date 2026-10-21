@@ -110,6 +110,8 @@ In this section you will get specific steps you need to follow to deploy this ap
     SMTP_EMAIL=your_email@gmail.com
     SMTP_PASSWORD=smtp_password
 
+    ERROR_EMAIL_RECIVER=email_that_will_recive_errors@gmail.com
+
     # After disconnect player have given time in miliseconds to reconnect
     PLAYER_TIMEOUT=10000 
     ```

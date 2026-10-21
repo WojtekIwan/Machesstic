@@ -60,7 +60,6 @@ export default function Game(){
         "q_white": queen_white, "q_black": queen_black
     }
 
-
     const [finished, setFinished] = useState(null)
 
     // Board object generating
@@ -97,9 +96,7 @@ export default function Game(){
     useEffect(() => {
         // Updating board (setting up figure positions etc)
         function update_board(){
-            console.log("isughdsugyrgierhgierhiug")
             socket.emit("get-game-data", user.id)
-            // setBoard(p => board) // Another call of setBoard() to update the figures
             setPromotion(p => null) // Reset promotion varible
         }
         

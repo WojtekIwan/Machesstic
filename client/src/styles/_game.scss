@@ -1,211 +1,309 @@
 @use "./varibles" as *;
 
-.dark_tile{
-    background-color: rgb(103, 56, 32);
+.dark_tile {
+  background-color: rgb(103, 56, 32);
 }
 
-.light_tile{
-    background-color: rgb(167, 108, 79);
+.light_tile {
+  background-color: rgb(167, 108, 79);
 }
 
-.chess_tile{
-    width: 4rem;
-    height: 4rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.chess_tile {
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  &:hover {
+    background-color: rgb(201, 186, 172);
+  }
+}
+
+td {
+  padding: 0rem !important;
+}
+
+.figure {
+  overflow: hidden;
+  position: fixed;
+  touch-action: none;
+  height: 4rem;
+  width: 4rem;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  img{
+    overflow: hidden;
     position: relative;
-
-    &:hover{
-        background-color: rgb(201, 186, 172);
-    }
-}
-
-
-
-td{
-    padding: 0rem !important;
-}
-
-.figure{
-    // border: 0.1rem solid rgb(153, 0, 255);
-    // color: rgb(153, 0, 255);
-    
-    position: fixed;
-    touch-action: none;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
     height: 4rem;
-    width: 4rem;     
+    width: 4rem;
     image-rendering: pixelated;
     transform: scale(0.75);
-
+  }
 }
 
-#main_container{
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
+#main_container {
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: $backgroundColorSecondary;
+
+  h1 {
+    @include h1_to_h3($h3Size);
+  }
+
+  .main_board {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-
-    background-color: $backgroundColorSecondary;
-
-    h1{
-        @include h1_to_h3($h3Size)
-    }
-
-    #game_board{
-        max-width: 32rem;
-        max-height: 32rem;
-        border-collapse: collapse;
-        border-spacing: 0;
-
-        tr > td{
-            padding: 0rem !important;
-        }
-    }
-}
-
-.possible_move{
-    width: 1rem;
-    height: 1rem;
-    background: $additionalPurple;
-    border-radius: 2rem;
-}
-
-.notation_x{
-    position: absolute;
-    top: 103%;
-
-    @include paragraph()
-}
-
-.notation_y{
-    position: absolute;
-    left: 110%;
-
-    @include paragraph()
-}
-
-.can_take{
-    border: 0.1rem solid $errorRed;
-}
-
-#your_profile{
+    flex-direction: row;
     position: relative;
-    width: 32rem;
+  }
+
+  #side_game_info {
+    background-color: $backgroundColor;
+    width: 20rem;
+    margin-left: 2rem;
+    height: 32rem;
+
+    h2{
+      @include h1_to_h3($h2Size);
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    p{
+      @include paragraph();
+      text-transform: capitalize;
+      text-align: center;
+      margin-top: 0.5rem;
+    } 
+
+    .no_moves{
+      @include paragraph();
+      text-align: center;
+      margin-top: 0.5rem;
+      height: 55%;
+      text-transform: none;
+    }
+
+    #game_history{
+      display: flex;
+      flex-wrap: wrap;
+      overflow-y: auto;
+      scrollbar-color: $backgroundColor $backgroundColorSecondary;
+      scrollbar-width: thin;
+
+      div{
+        width: 38%;
+        @include paragraph();
+        background-color: $backgroundColorSecondary;
+        margin: 0.5rem;
+        padding: 0.5rem;
+
+        .mini_figure{
+          margin: 0rem;
+          display: flex;
+          justify-content: start;
+          align-items: center;
+
+          img{
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+
+    #back_and_forward_history{
+      display: flex;
+      justify-content: space-around;
+      margin-top: 4rem;
+
+      button{
+        @include button($backgroundColorSecondary, $fontColor);
+        width: 45%;
+      
+        &:hover{
+          background-color: $fontColor;
+          color: $backgroundColorSecondary;
+        }
+      }
+    }
+  }
+
+  #game_board {
+    max-width: 32rem;
+    max-height: 32rem;
+    border-collapse: collapse;
+    border-spacing: 0;
+
+    tr>td {
+      padding: 0rem !important;
+    }
+  }
+
+  .btn{
+    @include button($additionalPurple, $fontColor);
+    width: 95%;
+    height: 2.5rem;
+
+    margin-top: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+
+    text-decoration: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.possible_move {
+  width: 1rem;
+  height: 1rem;
+  background: $additionalPurple;
+  border-radius: 2rem;
+}
+
+.notation_x {
+  position: absolute;
+  top: 103%;
+
+  @include paragraph();
+}
+
+.notation_y {
+  position: absolute;
+  left: 110%;
+
+  @include paragraph();
+}
+
+.can_take {
+  border: 0.1rem solid $errorRed;
+}
+
+#your_profile {
+  position: relative;
+  width: 32rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  @include paragraph();
+
+  div {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    
-    @include paragraph();
-    
-    div{
-        display: flex;
-        flex-direction: row;
-        margin-top: 2rem;
+    margin-top: 2rem;
 
-        img{
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.5rem;
-    
-            padding: 0.2rem;
-            
-            background-color: $additionalPurple;
-    
-            margin-left: 0.5rem;
-            margin-right: 0.5rem;
-        }
-    
-        div{
-            display: flex;
-            flex-direction: column; 
-            margin: 0rem;
-            p{
-                margin: 0rem;
-            }
+    img {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
 
-        }
+      padding: 0.2rem;
+
+      background-color: $additionalPurple;
+
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
     }
 
-    span{
-        margin-top: 1.5rem;
-        p{
-            padding: 0.5rem;
-        }
+    div {
+      display: flex;
+      flex-direction: column;
+      margin: 0rem;
+
+      p {
+        margin: 0rem;
+      }
     }
+  }
+
+  span {
+    margin-top: 1.5rem;
+
+    p {
+      padding: 0.5rem;
+    }
+  }
 }
 
-#enemy_profile{
-    position: relative;
-    width: 32rem;
+#enemy_profile {
+  position: relative;
+  width: 32rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  @include paragraph();
+
+  div {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    
-    @include paragraph();
-    div{
-        display: flex;
-        flex-direction: row;
-        margin-bottom: 1rem;
+    margin-bottom: 1rem;
 
-        img{
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.5rem;
-    
-            padding: 0.2rem;
-            
-            background-color: $additionalPurple;
-    
-            margin-left: 0.5rem;
-            margin-right: 0.5rem;
-        }
-    
-        div{
-            display: flex;
-            flex-direction: column; 
-            margin: 0rem;
-            p{
-                margin: 0rem;
-            }
+    img {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
 
-        }
+      padding: 0.2rem;
+
+      background-color: $additionalPurple;
+
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
     }
 
-    span{
-        p{
-            padding: 0.5rem;
-        }
+    div {
+      display: flex;
+      flex-direction: column;
+      margin: 0rem;
+
+      p {
+        margin: 0rem;
+      }
     }
+  }
+
+  span {
+    p {
+      padding: 0.5rem;
+    }
+  }
 }
 
-#promotion{
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    width: 3.8rem;
-    height: 15.8rem;
-    background-color: #CCCCCC;
-    z-index: 1000;
-    border: 0.1rem solid $additionalPurple;
+#promotion {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 3.8rem;
+  height: 15.8rem;
+  background-color: #cccccc;
+  z-index: 1000;
+  border: 0.1rem solid $additionalPurple;
 
-    img{
-        width: 4rem;
-        height: 3.9rem;
-        image-rendering: pixelated;
-        transform: scale(0.75);
-    }
+  img {
+    width: 4rem;
+    height: 3.9rem;
+    image-rendering: pixelated;
+    transform: scale(0.75);
+  }
 }
 
 // C0C0C0 CCCCCC - shadowing for white FFFFFF
