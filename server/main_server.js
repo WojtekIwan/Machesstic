@@ -454,6 +454,17 @@ app.get("/find_game/:time", jwt_connector.authenticate_token, async (req, res) =
     return res.status(200)
 })
 
+// Canceling matchmaking
+app.post("/cancel_game_find", jwt_connector.authenticate_token, async (req, res) => {
+    let player = active_players.get(req.user_id)
+    if(!player.game_id){
+        players_lobby.delete(req.user_id)
+        logger.warning(`${req.username} cancled matchmaking`)
+        return res.status(200).json({message: "You canceled the matchmaking"})
+    }
+    return res.status(400).json({message: "You are in game! You can`t cancel it!"})
+})
+
 // Returning data for finished games
 app.get("/after_game_data/:game_id", async (req, res) => {
     let result = await dc.get_after_game_data(req.params.game_id)

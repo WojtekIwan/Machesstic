@@ -36,7 +36,14 @@ export default function Play(){
     function play_with_another_player(e){
         setWaiting(p => true)
         axios.get(`http://localhost:3000/find_game/${gameTime}`, {withCredentials: true}).then(res => {
-            console.log(res.status)
+            console.log("Finding game...")
+        })
+    }
+
+    function cancel_search(e){
+        axios.post(`http://localhost:3000/cancel_game_find`, {}, {withCredentials: true}).then(res => {
+            console.log("Matchmaking canceled")
+            setWaiting(p => false)
         })
     }
     
@@ -55,7 +62,11 @@ export default function Play(){
                         })}
                     </div>
                     <p>{waiting ? "Searching for enemy..." : ""}</p>
-                    <button onClick={(e) => play_with_another_player(e)}>Find game</button>
+                    {waiting ? 
+                        <button onClick={(e) => cancel_search(e)}>Cancel</button>
+                    :
+                        <button onClick={(e) => play_with_another_player(e)}>Find game</button>
+                    }
                 </div>
             </section>
         </div>
