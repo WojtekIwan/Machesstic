@@ -70,7 +70,7 @@ export default function Login(){
                 <button onClick={(e) => check_login_data(e)}>Log into your account</button>
                 
                 {/* Redirect link */}
-                <Link to={"/user/create_account"} id="toCreateAccount">Don`t have account? Create one here!</Link>
+                <Link to={"/user/create_account"} id="to_create_account">Don`t have account? Create one here!</Link>
             </div>
         </div>
     )

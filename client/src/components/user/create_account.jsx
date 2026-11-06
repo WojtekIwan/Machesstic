@@ -8,21 +8,16 @@ import axios from "axios"
 import { useState } from "react"
 import "../../styles/main.scss"
 import logo from "../../assets/logo.png"
-import {useNavigate} from "react-router-dom"
+import {Link, useNavigate} from "react-router-dom"
 
 export default function CreateAccount(){
     // Varibles - user data
-    const [username, setUsername] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [repeatePassword, setRepeatPassword] = useState("")
-
+    const [userData, setUserData] = useState({})
     const [errorMessage, setErrorMessage] = useState("")
 
     // Varibles - verification section
     const [validated, setValidated] = useState(false)
     const [code, setCode] = useState("")
-
     const [veryfing, setVeryfing] = useState("")
 
     const navigate = useNavigate()
@@ -31,7 +26,6 @@ export default function CreateAccount(){
     function validate_account(e){
         e.preventDefault() // Prevent from redirecting to next page
         // Send request for validating user data. Then the code is sent
-        let userData = {"username": username, "email": email, "password": password, "repeatePassword": repeatePassword}
         setVeryfing(p => "Veryfing data...")
         setErrorMessage(p => "")     
         axios.post("http://localhost:3000/user/verify_user", userData, {withCredentials: true}).then((res) => {
@@ -49,13 +43,13 @@ export default function CreateAccount(){
     // Send verification request to backend
     function verify_code(e){
         e.preventDefault() // Prevent loading to another page
-        let userData = {"username": username, "email": email, "password": password, "repeatePassword": repeatePassword}
         axios.post(`http://localhost:3000/user/verify_code/${code}`, userData, {withCredentials: true}).then(res => {
-            setVeryfing(p => "Verification complete! Redirecting to login...")
+            setVeryfing(p => "Verification completed!")
             // Redirecting to log in page after short delay (visualy it looks better)
             setTimeout(() => {
                 navigate("/user/login")
             }, 500)
+            // Ehm I don`t think after a while that this is not the best idea but it works
         }).catch(error => {
             setErrorMessage(p => error.response.data.error_message)
         })
@@ -84,19 +78,21 @@ export default function CreateAccount(){
                 <div>
                     <img src={logo} alt="Logo for Machesstic" />
 
-                    <h2>Create account in Machesstic</h2>
+                    <h2>Registe for Machesstic</h2>
 
-                    <input type="text" id="username" autoComplete="off" placeholder="Enter your username..." onChange={(e) => setUsername(p => e.target.value)}/>
+                    <input type="text" id="username" autoComplete="off" placeholder="Enter your username..." onChange={(e) => setUserData(previous => ({...previous, "username": e.target.value}))}/>
 
-                    <input type="email" id="email" autoComplete="off" placeholder="Enter your email..." onChange={(e) => setEmail(p => e.target.value)}/>
+                    <input type="email" id="email" autoComplete="off" placeholder="Enter your email..." onChange={(e) => setUserData((previous => ({...previous, "email": e.target.value})))}/>
 
-                    <input type="password" id="password" placeholder="Enter password..." onChange={(e) => setPassword(p => e.target.value)}/>
+                    <input type="password" id="password" placeholder="Enter password..." onChange={(e) => setUserData((previous => ({...previous, "password": e.target.value})))}/>
 
-                    <input type="password" id="repeated_password" placeholder="Repeat your password..." onChange={(e) => setRepeatPassword(p => e.target.value)}/>
+                    <input type="password" id="repeated_password" placeholder="Repeat your password..." onChange={(e) => setUserData((previous => ({...previous, "repeatePassword": e.target.value})))}/>
 
                     {veryfing ? <p className="veryfing">{veryfing}</p> : <p className="error_message">{errorMessage}</p>}
                 
                     <button onClick={(e) => validate_account(e)}>Create your account</button>
+
+                    <Link to={"/user/login"} id="to_log_in">Already have account? Log in!</Link>
                 </div>
             </div>}
         </div>

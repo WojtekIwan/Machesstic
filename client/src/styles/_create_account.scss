@@ -1,51 +1,53 @@
-// ***********************************************************************************
-//                             CREATE ACCOUNT - STYLES
-//                              Create account styles
-// ***********************************************************************************
+// +---------------------------------------------------------------------------------+
+// |                          CREATE ACCOUNT STYLES                                  |
+// +---------------------------------------------------------------------------------+
 
-@use "./varibles" as *;
+@use "./variables" as *;
 
 // Create accoutn main container
 #create-account-form, #code-form{
+    &::before{ @include background_image_before(); } // Background (the purple dots)
+
     @include center_component(100%, 100vh, column, $backgroundColor);
 
+    div:before{ @include gradient_border($additionalPink, $additionalPurple); } 
+
+    // The log in form styles
     div{
-        @include center_component(32%, 32.5rem, column, $backgroundColorSecondary);
-        justify-content: space-around;
-        border-radius: 0.5rem;
         position: relative;
-        padding-bottom: 2rem;
+        @include center_component(30%, 32.5rem, column, $backgroundColorTransparent);
+        backdrop-filter: blur(1rem);
+        padding-top: 2rem;
+        justify-content: space-around;
+        border-radius: 1rem;
         
-        img{
-            @include logo_circle();
-        }
+        img{ @include logo_circle(); }
         
         h2{
-            padding-top: 3rem;
-            text-align: center;
+            padding-top: 2.5rem;
             @include h1_to_h3($h3Size);
         }
 
-        label{
-            @include paragraph();
-        }
+        label{ @include paragraph(); }
 
         input{
             @include input();
-            margin-top: 0.1rem;
-            margin-bottom: 0.1rem; 
-            border-radius: 0.75rem;
-            margin-top: 0.25rem;
-            margin-bottom: 0.25rem; 
             width: 16rem;
+            margin-top: 0.6rem;
+            margin-bottom: 0.25rem; 
+            border-radius: 0.75rem;
         }
 
-        .veryfing{
-            @include paragraph();
+        #to_log_in{
+            @include link_to_page();
+            padding-bottom: 1rem;
         }
+
+        .veryfing{ @include paragraph(); }
 
         .error_message{
             @include error_paragraph();
+            text-align: center
         }
 
         button{
@@ -59,67 +61,42 @@
 #code-form{
     div{
         height: 25rem !important; // Code form is much shorter for estetics reason
-        .code-text{
-            @include paragraph();
-        }
+        .code-text{ @include paragraph(); }
+        button{ margin-bottom: 1rem; }
     }
 }
 
 // Making form responsive
 @media (max-width: 1200px) {
     #create-account-form, #code-form{
-        div{
-            @include center_component(32.5%, 32.5rem, column, $backgroundColorSecondary);
-            justify-content: space-between;
-        }
-
-        h2{
-            padding-top: 0rem;
-            padding-bottom: 1.5rem;
-            margin-top: 1.5rem;
-            margin-bottom: 0rem;
-        }
-
-        input{
-            margin-top: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
+        div{ width: 35%; }
     }
 }
 
 // Smaller image + small adjustment of login size
-@media (max-width: 950px) {
+@media (max-width: 1000px) {
     #create-account-form, #code-form{
-        div{
-            @include center_component(45%, 32.5rem, column, $backgroundColorSecondary);
-            justify-content: space-between;
-        }
-
-        img{
-            @include logo_circle();
-            transform: scale(0.9);
-        }
+        div{ width: 45%; }
+        img{ transform: scale(0.9); }
     }
 }
 
 // Make component background a little bit bigger
-@media (max-width: 650px) {
+@media (max-width: 750px) {
     #create-account-form, #code-form{
-        div{
-            @include center_component(65%, 32.5rem, column, $backgroundColorSecondary);
-            justify-content: space-between;
-        }
+        div{ width: 65%; }
     }
 }
 
 // For small phones - delete backgound color (it looks a lot better)
-@media (max-width: 450px) {
+@media (max-width: 500px) {
     #create-account-form, #code-form{
-        background-color: $backgroundColorSecondary;
-
         div{
-            @include center_component(100%, 32.5rem, column, $backgroundColorSecondary);
-            justify-content: space-between;
+            background: none;
+            width: 100%;
+            backdrop-filter: blur(0rem);
+
+            &:before{ content: none; }
         }
     }
 }

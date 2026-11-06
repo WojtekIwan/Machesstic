@@ -4,18 +4,14 @@
 @use "./variables" as *;
 
 // The background
-#log_in_containter:before{
-    @include background_image_before();
-}
+#log_in_containter:before{ @include background_image_before(); }
 
 #log_in_containter{
     position: relative;
     @include center_component(100%, 100vh, column, $backgroundColor);
 
     // Gradient border over the log in form
-    div:before{
-        @include gradient_border($additionalPink, $additionalPurple);
-    }
+    div:before{ @include gradient_border($additionalPink, $additionalPurple); }
 
     // The log in form styles
     div{
@@ -24,11 +20,10 @@
         backdrop-filter: blur(1rem);
         justify-content: space-between;
         padding-top: 2rem;
+        border-radius: 1rem;
 
         // Logo
-        img{
-            @include logo_circle(); 
-        }
+        img{ @include logo_circle(); }
 
         h2{
             padding-top: 2.5rem;
@@ -45,11 +40,12 @@
 
         .error_paragraph{
             @include error_paragraph();
+            text-align: center
         }
 
-        #toCreateAccount{
+        #to_create_account{
             @include link_to_page();
-            padding-bottom: 1rem
+            padding-bottom: 1rem;
         }
 
         button{
@@ -63,16 +59,7 @@
 // Making form responsive
 @media (max-width: 1200px) {
     #log_in_containter{
-        div{
-            width: 32.5%;
-        }
-
-        h2{
-            padding-top: 0rem;
-            padding-bottom: 1.5rem;
-            margin-top: 1.5rem;
-            margin-bottom: 0rem;
-        }
+        div{ width: 32.5%;}
 
         input{
             margin-top: 0.75rem;
@@ -84,9 +71,7 @@
 // Smaller image + small adjustment of login size
 @media (max-width: 1000px) {
     #log_in_containter{
-        div{
-            width: 42.5%;
-        }
+        div{ width: 42.5%; }
 
         img{
             @include logo_circle();
@@ -98,9 +83,7 @@
 // Make component background a little bit bigger
 @media (max-width: 750px) {
     #log_in_containter{
-        div{
-            width: 60%;
-        }
+        div{ width: 60%; }
     }
 }
 
@@ -112,9 +95,7 @@
             width: 100%;
             backdrop-filter: blur(0rem);
 
-            &:before{
-                content: none;
-            }
+            &:before{ content: none; }
         }
     }
 }
