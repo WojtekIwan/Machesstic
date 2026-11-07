@@ -7,32 +7,35 @@
 import { Link } from "react-router-dom"
 import logo from "../../assets/logo.png"
 
-import { useContext } from "react"
-import { userContext } from "../../main"
-import { socketContext } from "../../main";
+import { useContext, useState } from "react"
+import { userContext, socketContext } from "../../main"
 
 import axios from "axios"
 
 import user_default from "../../assets/user_default.png"
+import menu from "../../assets/menu.png"
 
 // Siedbar component
 export default function SideBar(){
     const {user} = useContext(userContext) // Variable that stores basic user info
     const socket = useContext(socketContext) // Connection with server by socket
     
+    const [sideMenu, setSideMenu] = useState(false)
+
     // Logging out when user clicks Link
     function logout(){
         axios.get("http://localhost:3000/user/logout", {withCredentials: true}).then(res => {
             console.log("You have been logged out!")
-            if(socket.connected) socket.disconnect()
+            if(socket.connected) socket.disconnect() // Didn`t use catch because only 401 and 403 can occur here and they are handled in main
         })
-        // Didn`t use catch because only 401 and 403 can occur here and they are handled in main
     }
 
     return (
-        <nav>
+        <nav className={sideMenu ? "side_menu" : ""}>
             {/* Profile */}
-            <img className="logo" src={logo} alt="machesstic logo" />
+            <div className="logo">
+                <img src={logo} alt="machesstic logo" />
+            </div>
 
             {/* Links for diffrent subsites */}
             <Link className="link_to_page" to={"/user/play"}>Play</Link>
@@ -41,7 +44,7 @@ export default function SideBar(){
 
             {/* Link for user profile (img has this date thing so react would update it on change) */}
             <Link className="profile" to={`/user/profile/${user.username}`}>
-                <img src={`http://localhost:3000/uploads/${user.profile_picture}?t=${new Date().getTime()}`} onError={e => {e.target.src = user_default}} alt="user deafult image" />
+                <img src={`http://localhost:3000/uploads/${user.profile_picture}?t=${new Date().getTime()}`} onError={e => {e.target.src = user_default}} alt="user profile image" />
                 <div>
                     <h3>{user.username}</h3>
                     <p>Elo raiting: {user.elo}</p>
@@ -50,6 +53,10 @@ export default function SideBar(){
 
             {/* Logout button */}
             <Link onClick={logout} className="log_out" to={"/user/login"}>Log out</Link>
+
+            <div className="drop_down_menu">
+                <img onClick={() => setSideMenu(previous => !previous)} src={menu} alt="menu icon" />
+            </div>
         </nav>
     )
 }

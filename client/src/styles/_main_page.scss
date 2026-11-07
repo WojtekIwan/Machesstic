@@ -1,0 +1,78 @@
+// +---------------------------------------------------------------------------------+
+// |                               MAIN PAGE STYLES                                  |
+// +---------------------------------------------------------------------------------+
+
+@use "./variables" as *;
+
+.main_page{
+    @include center_component(100%, 100vh, row, $backgroundColor);
+
+    section{
+        position: relative;
+        height: 100%;
+        @include display_flex(center, center, column);
+        flex-grow: 100;
+
+        h2{
+            @include h1_to_h3($h2Size);
+            padding-left: 1rem;
+            margin-bottom: 0.25rem;
+            text-align: center;
+        }
+
+        h3{
+            @include h1_to_h3($h3Size);
+            text-align: center;
+        }
+
+        div{
+            position: relative;
+            div:before{
+                @include gradient_border($additionalPink, $additionalPurple);
+            }
+    
+            div{
+                height: 20rem;
+                width: 30rem;
+                border-radius: 1rem;
+                z-index: 1;
+    
+                background-color: $backgroundColorSecondary;
+    
+                @include display_flex(center, center, column);
+    
+                .link{
+                    @include button($additionalPurple, $fontColor);
+                    text-decoration: none;
+                    width: 15rem;
+                    height: 3rem;
+                    @include display_flex(center, center, row);
+                    margin-top: 3rem;
+                }
+    
+                p{
+                    @include paragraph();
+                    font-size: 1.15rem;
+                    margin-top: 0rem;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 500px) {
+    .main_page{
+        section{
+            div{
+                div{
+                    width: 100%;
+                    background-color: $backgroundColor;
+                }
+
+                div:before{
+                    display: none;
+                }
+            }
+        }
+    }
+}

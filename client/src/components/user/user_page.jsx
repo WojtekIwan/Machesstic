@@ -1,6 +1,6 @@
 // +---------------------------------------------------------------------------------+
 // |                           USER PAGE COMPONENT                                   |
-// |    It`s responsible all user operations (playing games, viewing profile etc.)   |
+// |           It`s the first page that user see, redirects to game section          |
 // +---------------------------------------------------------------------------------+
 
 // Imports
@@ -17,14 +17,16 @@ export default function UserPage(){
     const {user} = useContext(userContext) // Basic user data
 
     return (   
-        <div className="user_page">
+        <div className="main_page">
             {/* Side-navigation */}
             <SideBar />
             <section>
-                <div className="main_page">
-                    <h2>Welcome {user.username}!</h2>
-                    <p>Ready to play some games?</p>
-                    <Link to="/user/play" className="link">Play game</Link>
+                <div>
+                    <div>
+                        <h2>Welcome {user.username}!</h2>
+                        <p>Ready to play some games?</p>
+                        <Link to="/user/play" className="link">Play game</Link>
+                    </div>
                 </div>
             </section>
         </div>
