@@ -2,42 +2,63 @@
 // |                               SIDEBAR STYLES                                    |
 // +---------------------------------------------------------------------------------+
 
-@use "./varibles" as *; // Variables import
+@use "./variables" as *; // Variables import
 
 // Side navigation styles
 nav {
-  background-color: $backgroundColorSecondary;
-  width: 13rem;
-  height: 100vh;
 
-  display: flex;
-  flex-direction: column;
+  @include center_component(14rem, 100vh, column, $backgroundColorSecondary);
   justify-content: space-between;
   align-items: center;
 
   // Logo at sidebar
   .logo {
-    background-color: $backgroundColor;
+    position: relative;
+
     width: 6rem;
     height: 6rem;
-    border-radius: 3rem;
-    margin-top: 1rem;
-  }
 
+    margin-top: 1rem;
+    padding: 0.1rem;
+
+    background-color: $backgroundColor;
+    border-radius: 3rem;
+
+    img{
+      width: 100%;
+      height: 100%;
+    }
+    
+  }
+  
+  .logo:before{
+    @include gradient_border($additionalPink, $additionalPurple);
+    border-radius: 3rem;
+    z-index: 1;
+  }
   // Profile
   .profile {
-    @include display_flex(center, center, row);
-    background-color: $backgroundColor;
-    text-decoration: none;
     width: 10rem;
+    @include display_flex(center, center, row);
+
+    background-color: $backgroundColor;
+
+    position: relative;
+
+    border-radius: 0.5rem;
+
+    text-decoration: none;
+
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
 
     img {
       width: 2rem;
       height: 2rem;
+
       border-radius: 0.5rem;
       padding: 0.2rem;
 
-      background-color: $additionalPurple;
       margin-left: 0.5rem;
       margin-right: 0.5rem;
     }
@@ -60,13 +81,22 @@ nav {
     }
   }
 
+  .profile:before{
+    @include gradient_border($additionalPink, $additionalPurple);
+    z-index: 1;
+    border-radius: 0.5rem;
+  }
+
   .link_to_page {
     @include paragraph();
-    text-align: left;
+
     width: 10rem;
     padding-left: 1rem;
+    
+    text-align: left;
     font-size: 1.05rem;
     text-decoration: none;
+
     transition: transform 0.1s ease-in-out;
 
     &:hover {
@@ -78,8 +108,70 @@ nav {
   .log_out {
     @include button($additionalPurple, $fontColor);
     @include display_flex(center, center, row);
+
     text-decoration: none;
     margin-bottom: 1rem;
+
     width: 10rem;
+  }
+
+  .drop_down_menu{ display: none; }
+}
+
+// Side menu styles (when the size of the screen is less then 750px) 
+.side_menu{
+  z-index: 999;
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  background-color: $backgroundColorSecondary;
+
+  *{ display: block; }
+  
+  .link_to_page{
+    text-align: center;
+    padding-left: 0rem;
+  }
+
+  .logo:before{display: block;}
+
+  .profile:before{display: block;}
+  
+  .log_out{ display: flex; }
+}
+
+// For smaller screens the menu is hidden and you can access it by clicking a button on left corner
+@media (max-width: 750px) {
+  nav{
+    background-color: #ffffff00;
+    width: 0rem;
+
+    .logo:before{display: none;}
+
+    .profile:before{display: none;}
+
+    * {display: none;}
+
+    .log_out{display: none;}
+
+    // Dropdown menu button
+    .drop_down_menu{
+      width: 2rem;
+      height: 2rem;
+
+      position: absolute;
+      top: 5%;
+      left: 5%;
+
+      display: block !important;
+      z-index: 10;
+
+      img{
+        display: block;
+        width: 2rem;
+        height: 2rem;
+        cursor: pointer;
+      }
+    }
   }
 }

@@ -1,9 +1,13 @@
-@use "./varibles";
+@use "./variables";
 @use "./error_component";
 @use "./create_account";
 @use "./log_in";
 @use "./game";
 @use "./endgame";
+@use "./user_page";
+@use "./about";
+@use "./sidebar";
+@use "./friends";
 
 body{
     margin: 0rem;

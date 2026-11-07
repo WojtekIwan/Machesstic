@@ -1,7 +1,7 @@
-// ***********************************************************************************
-//                             CREATE ACCOUNT COMPONENT
-//                   Creating account by user and validating data
-// ***********************************************************************************
+// +---------------------------------------------------------------------------------+
+// |                           CREATE ACCOUNT COMPONENT                              |
+// |         Creating account and validating it by sending code to given email       |
+// +---------------------------------------------------------------------------------+
 
 // Imports
 import axios from "axios"
