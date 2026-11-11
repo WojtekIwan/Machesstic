@@ -1,0 +1,80 @@
+// +---------------------------------------------------------------------------------+
+// |                               PLAY PAGE STYLES                                  |
+// +---------------------------------------------------------------------------------+
+@use "./variables" as *;
+
+#play{
+    @include display_flex(start, start, row);
+    background-color: $backgroundColor;
+
+    section{
+        width: calc(100% - 14rem);
+        height: 100vh;
+        @include display_flex(center, center, row);
+
+        .play_page:before{ @include gradient_border($additionalPink, $additionalPurple);}
+    
+        .play_page{
+            position: relative;
+            border-radius: 1rem;
+            z-index: 1;
+    
+            background-color: $backgroundColorSecondary;
+    
+            width: 30rem;
+    
+            margin-left: auto;
+            margin-right: auto;
+            padding-bottom: 1rem;
+            padding-top: 1rem;
+        
+            text-align: center;
+    
+            h2{ @include h1_to_h3($h2Size); }
+        
+            p{
+                @include paragraph();
+                font-size: 1.15rem;
+            }
+        
+            div{
+                @include display_flex(center, center, row);
+                div{
+                    padding: 1rem;
+                    padding-left: 2rem;
+                    padding-right: 2rem;
+
+                    border-radius: 0.5rem;
+                    border: 0.05rem solid $backgroundColor;
+                    
+                    @include paragraph();
+                    
+                    margin: 0.5rem;
+        
+                    &:hover{ cursor: pointer; }
+                }
+            }
+        
+            button{ @include button($additionalPurple, $fontColor); }
+        }
+    }
+}
+
+@media (max-width: 500px) {
+    #play{
+        section{
+            .play_page{ width: 23rem; }
+        }
+    }
+}
+
+@media (max-width: 400px) {
+    #play{
+        section{
+            .play_page{
+                width: 18rem;
+                div{ flex-direction: column-reverse; }
+            }
+        }
+    }
+}

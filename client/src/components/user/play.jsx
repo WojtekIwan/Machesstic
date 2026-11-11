@@ -5,41 +5,29 @@
 
 // Basic imports
 import axios from "axios"
-import { useState, useContext, useEffect } from "react"
+import { useState, useContext } from "react"
 import SideBar from "./sidebar"
 import "../../styles/main.scss"
 import { socketContext } from "../../main";
-import { useNavigate } from "react-router-dom";
 
 // Play component
 export default function Play(){
     const [waiting, setWaiting] = useState(false)
     const socket = useContext(socketContext) // Getting reference to socket
 
-    const navigate = useNavigate()
-
     const [gameTime, setGameTime] = useState(600) // Defult 10m
     const [gameTimeOptions, setGameTimeOptions] = useState([60, 300, 600]) // Possible times: 1m 5m 10m
 
-    // UseEffect with socket io event for starting game
-    useEffect(() => {
-        function start(game_id){
-            setWaiting(p => false)
-            navigate(`/game/${game_id}`)
-        }
-
-        socket.on("start-game", start)
-
-        return () => {socket.off("start-game", start)}
-    })
-
+    // Waiting for enother player
     function play_with_another_player(e){
         setWaiting(p => true)
         axios.get(`http://localhost:3000/find_game/${gameTime}`, {withCredentials: true}).then(res => {
             console.log("Finding game...")
+            console.log(socket.id)
         })
     }
 
+    // Canceling the matchmaking
     function cancel_search(e){
         axios.post(`http://localhost:3000/cancel_game_find`, {}, {withCredentials: true}).then(res => {
             console.log("Matchmaking canceled")
@@ -48,7 +36,7 @@ export default function Play(){
     }
     
     return (
-        <div className="user_page">
+        <div id="play">
             <SideBar/>
             {/* Player section */}
             <section>

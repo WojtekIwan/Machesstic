@@ -27,9 +27,7 @@
 
         div{
             position: relative;
-            div:before{
-                @include gradient_border($additionalPink, $additionalPurple);
-            }
+            div:before{ @include gradient_border($additionalPink, $additionalPurple); }
     
             div{
                 height: 20rem;
@@ -69,9 +67,7 @@
                     background-color: $backgroundColor;
                 }
 
-                div:before{
-                    display: none;
-                }
+                div:before{ display: none; }
             }
         }
     }
