@@ -2,21 +2,26 @@
 // |                                 ABOUT STYLES                                    |
 // +---------------------------------------------------------------------------------+
 
-@use "./varibles" as *; // Variables import
+@use "./variables" as *; // Variables import
 
-// Whole about component styles
+// Whole "about" component styles
 #about{
     @include display_flex(center, space-between, row);
     background-color: $backgroundColor;
 
     #about_container{
-        @include display_flex(none, none, column);
-        width: 70%;
+        display: flex;
+        flex-direction: column;
+        width: calc(100% - 14rem);
+        align-items: center;
         height: 100vh;
         overflow-y: scroll;
         scrollbar-color: $backgroundColor $backgroundColorSecondary;
 
-        padding-left: 1rem;
+        *{
+            width: 70%;
+        }
+
         h2{
             @include h2();
             margin-bottom: 1.5rem;
@@ -29,18 +34,18 @@
     
         p{
             @include paragraph();
-            width: 70%;
         }
 
         ul{
             li{
                 @include paragraph();
-                padding: 0.5rem;
+                padding: 0.25rem;
             }
         }
 
         a{
             img{
+                width: auto;
                 height: 2rem;
                 margin-right: 1.5rem;
             }
@@ -52,10 +57,12 @@
             resize: none;
             min-height: 8rem;
             font-size: 0.8rem;
-            max-width: 70%;
+            // max-width: 70%;
         }
 
         button{
+            margin-left: 15%;
+            margin-right: auto;
             @include button($additionalPurple, $fontColor);
             width: 10rem;
             min-height: 3rem;
@@ -67,5 +74,33 @@
     
     .popup_info{
         @include popup_info();
+    }
+}
+
+@media (max-width: 750px) {
+    #about{
+        #about_container{
+            width: 100%;
+            padding-left: 0rem;
+
+            *{
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            ul{
+                li{
+                    margin-left: 0rem;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 450px) {
+     #about{
+        #about_container{
+            padding-left: 0rem;
+        }
     }
 }

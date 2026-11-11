@@ -20,9 +20,11 @@ export default function About(){
     function submit_error(e){
         if(message == "" && e.target.disabled) return false
 
+        // Prevent user from sending multiple messages
         e.target.disabled = true
         e.target.style.backgroundColor = "#323232"
 
+        // Submiting error to given email
         axios.post("http://localhost:3000/user/submit_error", {error_message: message}, {withCredentials: true}).then(res => {
             setResponse(previous => res.data.message)
         }).catch(error => {
@@ -46,7 +48,9 @@ export default function About(){
                 <ul>
                     <li>♟️ Matchmaking: depending on how much elo you got you will be matched against oponents on similar elo</li>
                     <li>⌛ In case of disconnect: when you or your opponent disconnects you have 10s to reconnect</li>
-                    <li>👤 All profiles are public: you can see your`s and your enemies profiles</li>
+                    <li>📜 Game history: you can see 20 most recent games that you played</li>
+                    <li>🪪 All profiles are public: you can see your`s and your enemies profiles</li>
+                    <li>👤 Editable profile: you can change your username (if it`s not taken) and your profile picture</li>
                     
                 </ul>
 
@@ -72,7 +76,7 @@ export default function About(){
                 </div>
 
                 <h3>Troubleshooting</h3>
-                <p>If you spot any mistakes or something that don`t work you can send form below, it will be really helpful to further update and devlop this application.</p>
+                <p>If you spot any mistakes or something that dosen`t work as it should you can send form below, it will be really helpful to further update and devlop this application.</p>
 
                 <textarea onChange={e => setMessage(previous => e.target.value)} id="textarea" rows={8} cols={10} placeholder="Type what happend and when error occured"  spellCheck={false}></textarea>
 
