@@ -41,10 +41,11 @@ export default function Figure(props){
     // Neccesary variables
     const figureRef = useRef(null)
     const [drag, setDrag] = useState(false)
+    let [scale, setScale] = useState(window.innerWidth <= 425 ? 36 : window.innerWidth <= 900 ? 48 : 64)
 
     // On loading page going to correct tile and settign up correct image path
-    const firstRunRef = useRef(true)
     useEffect(() => {
+        setScale(p => window.innerWidth <= 425 ? 36 : window.innerWidth <= 900 ? 48 : 64)
         update_position(props.x, props.y)
     }, [props.x, props.y])
 
@@ -60,11 +61,11 @@ export default function Figure(props){
 
     // Dragging figure around the board
     function drag_figure(e){
-        if(drag){        
+        if(drag){       
             let box = props.table.current.getBoundingClientRect() // Getting table bounding box
 
-            let x_drag = clamp(e.clientX, box.left, box.left + box.width) - 32
-            let y_drag = clamp(e.clientY, box.top, box.top + box.height) - 32
+            let x_drag = clamp(e.clientX, box.left, box.left + box.width) - (scale/2)
+            let y_drag = clamp(e.clientY, box.top, box.top + box.height) - (scale/2)
 
             // Setting up new figure position
             figureRef.current.style.left = `${Math.round(x_drag)}px`
@@ -95,15 +96,15 @@ export default function Figure(props){
 
     // Updating figure (going back to previous position - x and y don`t need to be changed)
     function go_back(){
-        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + props.x * 64}px`
-        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + props.y * 64}px`
+        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + props.x * scale}px`
+        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + props.y * scale}px`
     }
 
     // Updating position to given new x and y
     function update_position(new_x, new_y){
         // I am not using go back because x and y is not updated yet
-        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + new_x * 64}px`
-        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + new_y * 64}px`
+        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + new_x * scale}px`
+        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + new_y * scale}px`
     }
 
     // Dropping figure at given place if it`s dragged
@@ -115,9 +116,8 @@ export default function Figure(props){
             let y_drag = clamp(e.clientY, box.top, box.top + box.height) 
 
             // Locating a figure position in board cords (from 0 to 7 like board length)
-            let x_in_table = parseInt(clamp(Math.round(x_drag - box.left) / 64, 0, 7))
-            let y_in_table = parseInt(clamp(Math.round(y_drag - box.top) / 64, 0, 7))
-
+            let x_in_table = parseInt(clamp(Math.round(x_drag - box.left) / scale, 0, 7))
+            let y_in_table = parseInt(clamp(Math.round(y_drag - box.top) / scale, 0, 7))
             setDrag(p => false) // Figure is dropped so you don`t drag it
             props.figure_drop(y_in_table, x_in_table)
         }
@@ -133,24 +133,21 @@ export default function Figure(props){
 
 // Sub-component (responsible for figure placeholder for game review)
 export function FigurePlaceholder(props){
-    let [x, setX] = useState(props.x)
-    let [y, setY] = useState(props.y)
-
     const figureRef = useRef(null)
 
     function setPosition(x, y){
-        setX(previous => x)
-        setY(previous => y)
+        let scale =  window.innerWidth <= 425 ? 36 : window.innerWidth <= 900 ? 48 : 64
 
-        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + x * 64}px`
-        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + y * 64}px`
+        figureRef.current.style.top = `${props.table.current.getBoundingClientRect().top + x * scale}px`
+        figureRef.current.style.left = `${props.table.current.getBoundingClientRect().left + y * scale}px`
     }
 
     useEffect(() => {
         setPosition(props.x, props.y) 
     }, [figureRef])
-    return <div>
-        <img className={"figure"} ref={figureRef} src={images[String(props.type).toLowerCase() + "_" + props.color]} />
+    
+    return <div ref={figureRef} className={"figure"}>
+        <img src={images[String(props.type).toLowerCase() + "_" + props.color]} />
     </div>
 }
 

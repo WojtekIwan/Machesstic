@@ -1,0 +1,231 @@
+// +---------------------------------------------------------------------------------+
+// |                               FRIENDS STYLES                                    |
+// +---------------------------------------------------------------------------------+
+
+@use "./variables" as *;
+
+#friends{
+    @include display_flex(center, space-between, row);
+    background-color: $backgroundColor;
+    width: 100%;
+    .main_friends_component{
+        width: calc(100% - 14rem);
+        height: 100vh;
+        overflow-y: auto;
+        scrollbar-color: $backgroundColor $backgroundColorSecondary;
+        scrollbar-width: thin;
+
+        @include display_flex(center, start, column);
+        h2{
+            @include h1_to_h3($h2Size);
+            text-align: left;
+        }
+        div{
+            @include display_flex(center, space-between, row);
+            .friend_sections{
+                padding: 1rem;
+                position: relative;
+                @include display_flex(center, start, column);
+                width: 60%;
+                height: 50vh;
+
+                div{
+                    *{
+                        width: 100%;
+                    }
+                    @include display_flex(center, center, column);
+                    width: 100%;
+                    text-align: start;
+                    h3{
+                        @include h1_to_h3($h3Size);
+                    }
+            
+                    input{
+                        @include input();
+                        width: 15.5rem;
+                        background-color: $backgroundColorSecondary;
+                    }
+            
+                    p{
+                        @include paragraph();
+                        text-decoration: none;
+                    }
+            
+                    .player_search_result, .player_friend{
+                        width: 16.75rem;
+                        height: 4rem;
+                        background-color: $backgroundColorSecondary;
+                        margin-top: 1rem;
+                        @include display_flex(center, space-around, row);
+            
+                        .account_link{
+                            text-decoration: none;
+                            width: 50%;
+                            @include display_flex(center, space-around, row);
+                            img{
+                                width: 3rem;
+                                height: 3rem; 
+                            }
+            
+                            p{      
+                                width: auto;    
+                                &:hover{
+                                    color: $additionalPink;
+                                }
+                            }
+                        }
+                        
+                        button{
+                            background-color: #ffffff00;
+                            border: none;
+                            width: auto;
+            
+                            img{
+                                width: 1.5rem !important;
+                                height: 1.5rem;
+                            }
+                        }
+                    }
+
+                    .player_friend:before{
+                        @include gradient_border($additionalPink, $additionalPurple);
+                        border-radius: 0rem;
+                    }
+            
+                    .player_friend{
+                        position: relative;
+                        z-index: 1;
+                        padding: 0.5rem;
+
+                        p{
+                            width: auto;
+                        }
+                        button{
+                            @include button($additionalPurple, $fontColor);
+                            width: 4rem;
+                            height: 1.5rem;
+                        }
+            
+                        #challange_button{
+                            background-color: #ffffff00;
+                        }
+                    }
+                }
+            
+                .invite{
+                    @include display_flex(center, center, column);
+                    width: 16.75rem;
+                    background-color: $backgroundColorSecondary;
+                    padding-bottom: 1rem;
+                    text-align: center;
+            
+                    div{
+                        width: 100%;
+                        @include display_flex(center, space-around, row);
+                        button{
+                            @include button($additionalPurple, $fontColor);
+                            width: 5rem;
+                            height: 2rem;
+                        }
+                    }
+                }
+            
+            }
+            .invitation{
+                width: 15rem;
+                bottom: 10%;
+                right: 10%;
+                z-index: 999;
+                position: absolute;
+                flex-direction: column;
+                background-color: $backgroundColorSecondary;
+        
+                p{
+                    text-align: center;
+                    @include paragraph();
+                }
+        
+                div{
+                    width: 100%;
+                    @include display_flex(center, space-around, row);
+                    button{
+                        background-color: $backgroundColorSecondary;
+                        color: $fontColor;
+                        height: 1.5rem;
+                        width: 4rem;
+                        margin: 0.5rem;
+                        border: none;
+                        cursor: pointer;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Elements change flex from row to column
+@media (max-width: 1000px) {
+    #friends{
+        width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-color: $backgroundColor $backgroundColorSecondary;
+        nav{ height: 100vh; }
+        .main_friends_component{
+            h2{ width: 70%; }
+            div{
+                width: 70%;
+                flex-direction: column;
+                
+                .friend_sections{
+                    width: 100%;
+                    height: auto;
+
+                    div, input{
+                        text-align: start;
+                        margin-left: 0rem;
+                        margin-right: auto;
+                        .player_friend{ width: 15.5rem; }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// The sidebar dissapers so the width is changed
+@media (max-width: 750px) {
+    #friends{
+        .main_friends_component{
+            width: 85%;
+            h2{ margin-bottom: 1rem; }
+        }
+    }
+}
+
+// For small screens
+@media (max-width: 500px) {
+    #friends{
+        .main_friends_component{
+            width: 100%;
+            div{
+                .friend_sections{ padding: 0rem; }
+            }
+            .friend_sections{
+                div{
+                    input{
+                        width: 14.75rem !important;
+                    }
+                }
+                .player_search_result{
+                    width: 16rem !important;
+                }
+    
+                .player_friend{
+                    width: 15rem !important;
+                }
+            }
+        }
+    }
+}
+

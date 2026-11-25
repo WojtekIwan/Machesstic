@@ -21,20 +21,19 @@ export default function Play(){
     // Waiting for enother player
     function play_with_another_player(e){
         setWaiting(p => true)
-        axios.get(`http://localhost:3000/find_game/${gameTime}`, {withCredentials: true}).then(res => {
+        axios.get(`http://localhost:3000/api/find_game/${gameTime}`, {withCredentials: true}).then(res => {
             console.log("Finding game...")
-            console.log(socket.id)
         })
     }
 
     // Canceling the matchmaking
     function cancel_search(e){
-        axios.post(`http://localhost:3000/cancel_game_find`, {}, {withCredentials: true}).then(res => {
-            console.log("Matchmaking canceled")
+        axios.post(`http://localhost:3000/api/cancel_game_find`, {}, {withCredentials: true}).then(res => {
             setWaiting(p => false)
         })
     }
     
+    // rendering a play component
     return (
         <div id="play">
             <SideBar/>

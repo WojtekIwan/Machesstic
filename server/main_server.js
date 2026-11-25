@@ -3,10 +3,11 @@
 // |                 The core of the application, connects everything                |
 // +---------------------------------------------------------------------------------+
 
-// Necessary imports
+// Necessary imports 
 import express from "express"
 import cors from "cors"
 import user_router from "./routers/user.js"
+import {friends_router} from "./routers/friends.js"
 import cookieParser from "cookie-parser"
 import * as jwt_connector from "./jwt.js"
 import path from "path"
@@ -14,8 +15,6 @@ import process from "process"
 
 // import path from "path";
 import { fileURLToPath } from "url";
-
-// 1. Definiujemy brakujące w ES Modules __filename i __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -31,7 +30,7 @@ logger.title("MACHESSTIC SERVER INIT")
 // Express server setup
 const app = express()
 app.use(express.json())
-app.use(cors({origin: "http://localhost:5173", credentials: true}))
+app.use(cors({origin: process.env.CLIENT_PATH, credentials: true}))
 app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
 
@@ -43,7 +42,7 @@ import http from "http"
 import { Server } from "socket.io"
 
 const server = http.createServer(app)
-const io = new Server(server, {cors: {origin: "http://localhost:5173",methods: ["GET", "POST"], credentials: true}})
+const io = new Server(server, {cors: {origin: process.env.CLIENT_PATH, methods: ["GET", "POST"], credentials: true}})
 
 // Database Connector setup
 import DatabaseConnector from "./database_connector.js"
@@ -57,11 +56,13 @@ if(!await dc.ping_database()){
     logger.okay("Connection with database established!")
 }
 
-app.get("/", (req, res) => {
-    return res.status(200).send("This is main server site. Nothing to see here")
+app.get("/api", (req, res) => {
+    return res.status(200).send("This is main api site. Nothing to see here")
 })
 
-app.use("/user", user_router) // Connection to user router
+app.use("/api/user", user_router) // Connection to user router
+
+app.use("/api/friends", friends_router) // Connection to friends router
 
 // +---------------------------------------------------------------------------------+
 // |                                GAME SECTION                                     |
@@ -120,6 +121,7 @@ io.on("connection", (socket) => {
                 clearTimeout(player_data.timer) // Removing timeout for removing player
 
                 // If player was in game add him again
+                // active_players.get(id).socket.disconnect()
                 active_players.get(id).socket = socket // Update socket!!!
                 disconnected_players.delete(id)
 
@@ -129,6 +131,13 @@ io.on("connection", (socket) => {
                 }
                 
                 logger.okay(`${active_players.get(id).username} rejoined!`)
+            }else{
+                // It`s rejoin without disconnection
+                active_players.get(id).socket = socket // Update socket!!!
+
+                if(active_players.get(id).game_id){
+                    socket.join(active_players.get(id).game_id)
+                }
             }
         }    
     })
@@ -137,11 +146,15 @@ io.on("connection", (socket) => {
     socket.on("get-game-data", async (id) => {
         // Basic data for user
         let player = active_players.get(id)
+        if(!player.game_id){
+            logger.warning("Game already finished. Showing after match preview...")
+            socket.emit("game-end")
+            return
+        } 
         let game = current_games.get(player.game_id)
         
         // Getting enemy basic data (for profile purpose)
         let enemy = player.color == "white" ? active_players.get(game.black) : active_players.get(game.white)
-
         // Updating user ingame data 
         socket.emit("board-data", active_players.get(id).color, current_games.get(active_players.get(id).game_id).chessboard.board, enemy.username, enemy.elo, enemy.profile_picture)
         
@@ -187,27 +200,14 @@ io.on("connection", (socket) => {
             current_games.get(player.game_id).finished = move.checkmate || move.stalemate
 
             if(move.stalemate){
-                io.to(player.game_id).emit("finished", "By stalemate", -1, 0)
+                io.to(player.game_id).emit("finish", "By stalemate", -1, 0)
                 // Update game in database
                 await dc.endgame(game.game_id, null, game.chessboard.moves_history, 0, "stalemate") // null because it`s a draw
+                active_players.get(game.white).game_id = null
+                active_players.get(game.black).game_id = null
             }else if(move.checkmate){
+                endgame(id, "checkmate", game.chessboard.turn == "white" ? "black" : "white")
                 game.finished = true
-                let reason = "By checkmate"
-                let white = active_players.get(game.white)
-                let black = active_players.get(game.black)
-
-                // Depending on whose turn it is update win screen
-                let winner_color = game.chessboard.turn == "white" ? "black" : "white"
-                if(winner_color == "white"){
-                    white.socket.emit("finish", reason, 1, game.elo_gain)
-                    black.socket.emit("finish", reason, 0, black.elo - game.elo_gain >= 0 ? -game.elo_gain : -(black.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
-                }else{
-                    black.socket.emit("finish", reason, 1, game.elo_gain)
-                    white.socket.emit("finish", reason, 0, white.elo - game.elo_gain >= 0 ? -game.elo_gain : -(white.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
-                }
-
-                // Update game database
-                await dc.endgame(player.game_id, game[winner_color], game.chessboard.moves_history, game.elo_gain, "checkmate")
             }
 
             io.to(player.game_id).emit("update-board")
@@ -216,11 +216,12 @@ io.on("connection", (socket) => {
 
     // Player time has run out so he loses the game
     socket.on("timeout-endgame", async (player_id) => {
-        endgame(player_id, "timeout")
+        let player = active_players.get(player_id)
+        endgame(player_id, "timeout", player.color == "black" ? "white" : "black")
     })
 
     // Instead of writing endgame multiple times one function does it all
-    async function endgame(player_id, reason){
+    async function endgame(player_id, reason, winner_color){
         let player = active_players.get(player_id) // Getting player reference
         let database_game = await dc.get_game(player.game_id) // Getting a reference to game in database
 
@@ -228,22 +229,75 @@ io.on("connection", (socket) => {
 
         let game = current_games.get(player.game_id)
 
-        let winner_color = player.color == "black" ? "white" : "black"
-
         let black = active_players.get(game["black"])
         let white = active_players.get(game["white"])
 
         if(winner_color == "white"){
+            // Calculating elo if player has less elo then the loss
+            game.elo_gain[game["black"]] = black.elo - game.elo_gain[game["black"]] >= 0 ? -game.elo_gain[game["black"]] : -( game.elo_gain[game["black"]] - black.elo)
+            
             white.socket.emit("finish", "By " + reason, 1, game.elo_gain)
-            black.socket.emit("finish", "By " + reason, 0, black.elo - game.elo_gain >= 0 ? -game.elo_gain : -(black.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
+            black.socket.emit("finish", "By " + reason, 0, game.elo_gain)
         }else{
+            // Calculating elo if player has less elo then the loss
+            game.elo_gain[game["white"]] = white.elo - game.elo_gain[game["white"]] >= 0 ? -game.elo_gain[game["white"]] : -(game.elo_gain[game["white"]] - white.elo)
+            
+            white.socket.emit("finish", "By " + reason, 0, game.elo_gain)
             black.socket.emit("finish", "By " + reason, 1, game.elo_gain)
-            white.socket.emit("finish", "By " + reason, 0, white.elo - game.elo_gain >= 0 ? -game.elo_gain : -(white.elo - game.elo_gain)) // For a case when enemy has less elo than a lose value
         }
+
+        white.elo += game.elo_gain[game["white"]]
+        black.elo += game.elo_gain[game["black"]]
 
         // Update game database
         await dc.endgame(player.game_id, game[winner_color], game.chessboard.moves_history, game.elo_gain, reason)
+
+        current_games.delete(player.game_id) // Deleting game from game list
+
+        black.game_id = null
+        white.game_id = null
+
+        white.color = null
+        black.color = null
+
     }
+
+    // User gave up, end game
+    socket.on("give-up", async (player_id) => {
+        let player = active_players.get(player_id)
+        if(!player || !player.game_id) return
+        endgame(player_id, "surrender", player.color == "white" ? "black" : "white")
+    })
+
+    // User accepted draw
+    socket.on("draw-accept", async (player_id) => {
+        let player = active_players.get(player_id)
+        if(!player || !player.game_id) return
+        let game = current_games.get(player.game_id)
+        io.to(player.game_id).emit("finish", "By accepting a draw", -1, {[game.white]: 0, [game.black]: 0})
+
+        // Update game in database
+        await dc.endgame(player.game_id, null, game.chessboard.moves_history, 0, "draw") // null because it`s a draw
+
+        current_games.delete(player.game_id) // Deleting game from game list
+
+        active_players.get(game.white).game_id = null
+        active_players.get(game.black).game_id = null
+
+        active_players.get(game.white).color = null
+        active_players.get(game.black).color = null
+    })
+
+    // Send draw proposition to other player
+    socket.on("propose-draw", (player_id) => {
+        let player = active_players.get(player_id)
+
+        if(!player || !player.game_id) return 
+
+        let game = current_games.get(player.game_id)
+
+        active_players.get(game[player.color == "white" ? "black" : "white"]).socket.emit("draw-request")
+    })
 
     // On disconnect remove player from active players and eventually leave all games
     socket.on("disconnect", async () => {
@@ -256,22 +310,27 @@ io.on("connection", (socket) => {
                 let timer = setTimeout(async () => {
                     if(!disconnected_players.has(players[i][0])) return
                     logger.error(`${players[i][1].username} left the game!`)
-                    // Player is in game! Update it
+                    // Player was in game! Update it
                     if(players[i][1].game_id){
                         let game = current_games.get(players[i][1].game_id)
                                  
                         // Update endgame for diffrent players
-                        let enemy = players[i][1].color == "white" ? "black" : "white"
+                        let enemy_color = players[i][1].color == "white" ? "black" : "white"
 
                         // Enemy is in game so he won
-                        if(active_players.has(game[enemy]) && !game.finished){
-                            active_players.get(game[enemy]).socket.emit("finish", "Enemy left", 1, game.elo_gain)
+                        let enemy = active_players.get(game[enemy_color])
+                        if(enemy && !game.finished){
+                            enemy.socket.emit("finish", "Enemy left", 1, game.elo_gain)
+                            enemy.elo += game.elo_gain[game[enemy_color]]
+
+                            await dc.update_elo(players[i][0], -game.elo_gain[players[i][0]]) // Update enemy elo
+                            
                             game[players[i][1].color] = null // Player left, remove him from game
                             game.finished = true
                         }
                         
                         // If both left, end it
-                        if(game[enemy] == null){
+                        if(game[enemy_color] == null){
                             logger.warning("Closing game because there is no one in there")
                             await dc.set_finished(players[i][1].game_id)
                             current_games.delete(players[i][1].game_id) // Deleting game from history
@@ -348,7 +407,6 @@ io.on("connection", (socket) => {
             // Setting up game id for user
             user.game_id = id
             user.socket.join(id)
-
             // Update when both join the game
             if(current_game.white && current_game.black){
                 io.to(id).emit("update-board")
@@ -356,11 +414,10 @@ io.on("connection", (socket) => {
             }else{
                 socket.emit("wait-for-enemy") // If enemy is not in game yet send waiting
             }
-        }else if(game_in_database && game_in_database.finished && !current_games.has(id) ){
+        }else if(game_in_database && game_in_database.finished ){
             // The game is finished so show after game
             logger.warning("Game already finished. Showing after match preview...")
-
-            // TODO: DISPLAYING REVIEW
+            socket.emit("game-end")
         }
     })
 
@@ -388,19 +445,54 @@ io.on("connection", (socket) => {
         }
 
     })
+
+    // Sends an invitation to chess game
+    socket.on("challange-friend", async (user_id, friend_username) => {
+        let friend_id = await dc.get_id_by_username(friend_username)
+        let player = active_players.get(user_id)
+        if(active_players.has(friend_id.id) && active_players.get(friend_id.id).game_id == null){
+            active_players.get(friend_id.id).socket.emit("send-invitation", player.username)
+            logger.okay(`Invitation was send to ${friend_username}`)
+        }else{
+            logger.warning(`Can not send invitation to ${friend_username}`)
+        } 
+    })
+
+    // Challange from friend was accepted, proced to play a game
+    socket.on("accept-challange", async (id, friend_username) => {
+        let friend_id = await dc.get_id_by_username(friend_username)
+        let friend = active_players.get(friend_id.id)
+        let player = active_players.get(id)
+
+        // Adding game to database
+        let game = await dc.create_game(friend_id.id, id)
+
+        // Here I come with some funny elo equation (scale with the diffrence from elo`s). 
+        // This formula is not perfect however it works
+        let elo_diffrence = Math.max(Math.floor(Math.abs(friend.elo - player.elo) / 20), 1)
+        let elo_gain_player1 = friend.elo > player.elo ? 8 + elo_diffrence : 8 - elo_diffrence
+        let elo_gain_player2 = player.elo > friend.elo ? 8 + elo_diffrence : 8 - elo_diffrence
+
+        // Creating chessboard and adding custom time for players (they cant play with enemy who choose diffrent time)
+        const chessboard = new ChessGame()
+        current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": 600, "white": 600}, "last_move": Date.now(),  "elo_gain": {[friend_id.id]: elo_gain_player2, [id]: elo_gain_player1}})
+            
+        logger.okay(`Starting new game [between friends] for: ${friend.username} and ${player.username}`)
+            
+        player.socket.emit("start-game", game.game_id)
+        friend.socket.emit("start-game", game.game_id)
+    })
 })
 
 // Finding game for player
-app.get("/find_game/:time", jwt_connector.authenticate_token, async (req, res) => {
+app.get("/api/find_game/:time", jwt_connector.authenticate_token, async (req, res) => {
     logger.okay(`${req.username} wants to play!`)
-
     // Is player in game already? If not then it will be added to player lobby
     if(!players_lobby.has(req.user_id) && active_players.get(req.user_id).game_id == null){
         players_lobby.set(req.user_id, active_players.get(req.user_id))
         players_lobby.get(req.user_id)["play_time"] = req.params.time // Setting play time for players
         // Matchmaking - sorting players by elo
         let sorted_players = [...players_lobby.entries()].sort((a, b) => b.time - a.time || b.elo - a.elo)
-
         let i = 2
         while(i <= sorted_players.length && 0 <= i - 2){
             // Getting players varibles
@@ -429,14 +521,17 @@ app.get("/find_game/:time", jwt_connector.authenticate_token, async (req, res) =
 
             // Here I come with some funny elo equation (scale with the diffrence from elo`s). 
             // This formula is not perfect however it works
-            let elo_gain = 8 + Math.floor(Math.abs(player1.elo - player2.elo) / 20) 
+            let elo_diffrence = Math.max(Math.floor(Math.abs(player1.elo - player2.elo) / 20), 0)
+
+            let elo_gain_player1 = player1.elo > player2.elo ? 8 + elo_diffrence : 8 - elo_diffrence
+            let elo_gain_player2 = player2.elo > player1.elo ? 8 + elo_diffrence : 8 - elo_diffrence
+            // let elo_gain = 8 + Math.floor(Math.abs(player1.elo - player2.elo) / 20) 
     
             // Creating chessboard and adding custom time for players (they cant play with enemy who choose diffrent time)
             const chessboard = new ChessGame()
-            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": Number(player1.play_time), "white": Number(player1.play_time)}, "last_move": Date.now(), "elo_gain": elo_gain})
+            current_games.set(game.game_id, {"chessboard": chessboard, "black": null, "white": null, "finished": false, "timers": {"black": Number(player1.play_time), "white": Number(player1.play_time)}, "last_move": Date.now(), "elo_gain": {[player2_id]: elo_gain_player1 , [player1_id]: elo_gain_player2}})
             
             logger.okay(`Starting new game for: ${player1.username} and ${player2.username}`)
-            
             player1.socket.emit("start-game", game.game_id)
             player2.socket.emit("start-game", game.game_id)
 
@@ -451,11 +546,11 @@ app.get("/find_game/:time", jwt_connector.authenticate_token, async (req, res) =
         return res.status(400).json({message: "You are already in game"})
     }
 
-    return res.status(200)
+    return res.status(200).json({message: 'seariously nigga?'})
 })
 
 // Canceling matchmaking
-app.post("/cancel_game_find", jwt_connector.authenticate_token, async (req, res) => {
+app.post("/api/cancel_game_find", jwt_connector.authenticate_token, async (req, res) => {
     let player = active_players.get(req.user_id)
     if(!player.game_id){
         players_lobby.delete(req.user_id)
@@ -466,10 +561,9 @@ app.post("/cancel_game_find", jwt_connector.authenticate_token, async (req, res)
 })
 
 // Returning data for finished games
-app.get("/after_game_data/:game_id", async (req, res) => {
+app.get("/api/after_game_data/:game_id", async (req, res) => {
     let result = await dc.get_after_game_data(req.params.game_id)
     if(!result) return res.status(500).json({"error": "There is no game with given id"})
-
     if(!result.game.finished) return res.status(500).json({"error": "This game is not finished"})
 
     // Winner data
@@ -493,7 +587,6 @@ app.get("/after_game_data/:game_id", async (req, res) => {
 })
 
 // This small section is for serving static files (for react)
-
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get('*splat', (req, res) => {

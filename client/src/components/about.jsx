@@ -25,7 +25,7 @@ export default function About(){
         e.target.style.backgroundColor = "#323232"
 
         // Submiting error to given email
-        axios.post("http://localhost:3000/user/submit_error", {error_message: message}, {withCredentials: true}).then(res => {
+        axios.post("http://localhost:3000/api/user/submit_error", {error_message: message}, {withCredentials: true}).then(res => {
             setResponse(previous => res.data.message)
         }).catch(error => {
             setResponse(previous => error.response.data.message)

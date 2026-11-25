@@ -48,6 +48,8 @@ export default function Game(){
     const [board, setBoard] = useState(null)
     const colorRef = useRef("")
 
+    let [draw, setDraw] = useState(false)
+
     // User timers (for player and enemy)
     const [timers, setTimers] = useState({"white": 15, "black": 15})
     let intervalId = null // Timer interval
@@ -78,12 +80,12 @@ export default function Game(){
 
     // Setting up user data and joining a game
     let params = useParams() // Getting params from url (game id is crucial here)
-    const {user, fetch_data} = useContext(userContext)
+    const {user, fetch_data, setUser} = useContext(userContext)
 
     // Join game as soon as user change
     useEffect(() => {
         if(!user.id) return
-        socket.emit("join-game", params.id, user.id) // Joining game      
+        if(finished == null || !finished) socket.emit("join-game", params.id, user.id) // Joining game   
     }, [user])
 
 
@@ -97,13 +99,12 @@ export default function Game(){
         // Updating board (setting up figure positions etc)
         function update_board(){
             socket.emit("get-game-data", user.id)
-            setPromotion(p => null) // Reset promotion varible
         }
-        
+
         // Updating board data
         function get_board_data(color, board, enemy_username, enemy_elo, enemy_image){
+            setPromotion(p => null) // Reset promotion varible
             setBoard(previous =>  [...board])
-
             setFigures(previous => {
                 let pom = []
                 for(let i = 0; i < board_length; i++){
@@ -159,6 +160,7 @@ export default function Game(){
         // Making figure move and clearing old interval
         function make_move(can_move){
             currentFigureRef.current.figure.style.pointerEvents = "all"
+            currentFigureRef.current.figure.style.zIndex = 0
 
             // If figure cant move go back
             if(!can_move) currentFigureRef.current.go_back()
@@ -178,20 +180,12 @@ export default function Game(){
 
         // Setting up finish component with basic data
         function finish(reason, won, eloGained){
-            setFinished({"reason": reason, "won": won, "reward": eloGained})
+            setDraw(previous => "")
+            // setUser(p => ({...p, "elo": user.elo + eloGained[colorRef.current]}))
+            setFinished(previous => ({"reason": reason, "won": won, "reward": eloGained[user.id]}))
             clearInterval(intervalId)
             intervalId = null
             fetch_data() // Fetching after winning so data is updated
-        }
-
-        // Player gives up
-        function give_up(){
-
-        }
-
-        // Player propose a draw
-        function draw(){
-
         }
 
         // Updating promotion if possible
@@ -201,9 +195,20 @@ export default function Game(){
 
         // Waiting for enemy to join - for now only console.log message
         function wait_for_enemy(){
-            console.log("Waiting for enemy")
+            console.log("Waiting for enemy...")
+        }
+
+        function draw_request(){
+            setDraw(previous => true)
+        }
+
+        // Mike Shinoda reference <3
+        function already_over(){
+            window.location.href = "/game_review/" + params.id
         }
         
+        // Displaying game review if its finished
+        socket.on("game-end", already_over)
         // Other player is not in game yet, load waiting message
         socket.on("wait-for-enemy", wait_for_enemy) 
         // Getting actuall board data from server
@@ -220,9 +225,12 @@ export default function Game(){
         socket.on("set-possible-moves", possible_moves)
         // Placing figure at correct place after a move
         socket.on("make-move", make_move)
+        // Sending draw request to other player
+        socket.on("draw-request", draw_request)
 
         return () => {
             // Turining off sockets events (for cleanup purposes)
+            socket.off("end-game", already_over)
             socket.off("wait-for-enemy", wait_for_enemy)
             socket.off("update-timers", update_timers)
             socket.off("board-data", get_board_data)
@@ -231,6 +239,7 @@ export default function Game(){
             socket.off("finish", finish)
             socket.off("set-possible-moves", possible_moves)           
             socket.off("make-move", make_move)
+            socket.off("draw-request", draw_request)
         }
     }, [socket, user])
 
@@ -248,6 +257,16 @@ export default function Game(){
             }
         }
         setVisualBoard(p => copy)
+    }
+
+    // Player gives up
+    function give_up(e){
+        socket.emit("give-up", user.id)
+    }
+
+    // Player propose a draw
+    function draw_proposition(e){
+        socket.emit("propose-draw", user.id)
     }
 
     // Dropping figure at given place
@@ -290,67 +309,80 @@ export default function Game(){
     // Whole board and UI is generated here
     return (
         <div id="main_container">
-            {/* Enemy profile picture (the bar on the top of board) */}
-            <div id="enemy_profile">
-                <div>
-                    <img src={`http://localhost:3000/uploads/${enemy.image}?t=${new Date().getTime()}`} alt="Enemy profile picture" onError={e => {e.target.src = user_default}} />
+            <div>
+                {/* Enemy profile picture (the bar on the top of board) */}
+                <div id="enemy_profile">
                     <div>
-                        <p>{enemy.username}</p>
-                        <p>{enemy.elo}</p>
+                        <img src={`http://localhost:3000/uploads/${enemy.image}?t=${new Date().getTime()}`} alt="Enemy profile picture" onError={e => {e.target.src = user_default}} />
+                        <div>
+                            <p>{enemy.username}</p>
+                            <p>{enemy.elo}</p>
+                        </div>
                     </div>
+                    <span>{timers[enemy.color] != null ? <p style={{backgroundColor: enemy.color, color: colorRef.current}}>{Math.floor(timers[enemy.color] / 60)} : {Math.round(timers[enemy.color] % 60) <= 9 ? "0" + Math.round(timers[enemy.color] % 60) : Math.round(timers[enemy.color] % 60)}</p> : ""}</span>
                 </div>
-                <span>{timers[enemy.color] != null ? <p style={{backgroundColor: enemy.color, color: colorRef.current}}>{Math.floor(timers[enemy.color] / 60)} : {Math.round(timers[enemy.color] % 60) <= 9 ? "0" + Math.round(timers[enemy.color] % 60) : Math.round(timers[enemy.color] % 60)}</p> : ""}</span>
+
+                {/* Generating chess board */}
+                <table id="game_board" ref={tableRef}>
+                    <tbody>
+                        {visualBoard?.map((row, index) => {
+                            let notations = colorRef.current == "white" ?  "ABCDEFGH" : "HGFEDCBA"// Side numeration
+                            return <tr key={index}>{row.map((tile, index2) => {
+                                let x2 = colorRef.current == "black" ? 7 - tile.x : tile.x // Reversing x depending on color
+
+                                let notation_x = tile.y == 7 ? notations.charAt( colorRef.current == "black" ? 7 - x2 : x2) : ""
+                                let notation_y = colorRef.current == "black" ? tile.y + 1 : 7 - tile.y + 1
+
+                                // Generating invidual tiles for given cords
+                                return <td key={index2}><Tile key={x2 * board_length + tile.y} x={tile.x} y={tile.y} possible_move={tile.possible_move} notation_x={notation_x} notation_y={notation_y} /></td>
+                            })
+                        }</tr>})}
+                    </tbody>
+                </table>
+
+                {/* Promotion */}
+                {promotion ? <div id="promotion" style={{left: tableRef.current.getBoundingClientRect().left, top: tableRef.current.getBoundingClientRect().top}}>
+                    <img src={images["h_" + colorRef.current]} alt="horse for promotion" onClick={() => choose_promotion("h")} />
+                    <img src={images["b_" + colorRef.current]} alt="bishop for promotion" onClick={() => choose_promotion("b")} />
+                    <img src={images["r_" + colorRef.current]} alt="rook for promotion" onClick={() => choose_promotion("r")} />
+                    <img src={images["q_" + colorRef.current]} alt="queen for promotion" onClick={() => choose_promotion("q")} />
+                </div> : <></>}
+
+                {/* Generating figures for board */}
+                { figures.map((element) => {
+                    let y = element.y
+                    let x =  colorRef.current == "black" ? 7 - element.x : element.x  // Reversing for black
+                    // Generating figure component
+                    return <Figure key={element.id} x={x} y={y} type={element.name} possible_move={visualBoard[x][y].possible_move} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
+                })}
+
+                {/* Generating user profile (bottom bar with username, elo and profile picture) */}
+                <div id="your_profile">
+                    <div>
+                        {/* Dynamically getting user image from server */}
+                        <img src={`http://localhost:3000/uploads/${user.profile_picture}?t=${new Date().getTime()}`} alt="User profile picture" onError={e => {e.target.src = user_default}} />
+                        <div>
+                            <p>{user.username}</p>
+                            <p>{user.elo}</p>
+                        </div>
+                    </div>
+                    <span>{timers[colorRef.current] != null ? <p style={{backgroundColor: colorRef.current, color: enemy.color}}>{Math.floor(timers[colorRef.current] / 60)} : {Math.round(timers[colorRef.current] % 60) <= 9 ? "0" + Math.round(timers[colorRef.current] % 60) : Math.round(timers[colorRef.current] % 60)}</p> : ""}</span>
+                </div>
+            </div>
+            <div className="game-options">
+                <button disabled={finished} onClick={(e) =>  draw_proposition(e)}>⚖️</button>
+                <button disabled={finished} onClick={(e) =>  give_up(e)}>🏳️</button>
             </div>
 
-            {/* Generating chess board */}
-            <table id="game_board" ref={tableRef}>
-                <tbody>
-                    {visualBoard?.map((row, index) => {
-                        let notations = "ABCDEFGH" // Side numeration
-                        return <tr key={index}>{row.map((tile, index2) => {
-                            let x2 = colorRef.current == "black" ? 7 - tile.x : tile.x // Reversing x depending on color
-
-                            let notation_x = tile.x == 7 ? notations.charAt( colorRef.current == "black" ? 7 - tile.y : tile.y) : ""
-                            let notation_y = tile.y == 7 ? 7 - tile.x + 1 : 7 - x2 + 1 
-
-                            // Generating invidual tiles for given cords
-                            return <td key={index2}><Tile key={x2 * board_length + tile.y} x={x2} y={tile.y} possible_move={tile.possible_move} notation_x={notation_x} notation_y={notation_y} /></td>
-                        })
-                    }</tr>})}
-                </tbody>
-            </table>
-
-            {/* Promotion */}
-            {promotion ? <div id="promotion" style={{left: tableRef.current.getBoundingClientRect().left, top: tableRef.current.getBoundingClientRect().top}}>
-                <img src={images["h_" + colorRef.current]} alt="horse for promotion" onClick={() => choose_promotion("h")} />
-                <img src={images["b_" + colorRef.current]} alt="bishop for promotion" onClick={() => choose_promotion("b")} />
-                <img src={images["r_" + colorRef.current]} alt="rook for promotion" onClick={() => choose_promotion("r")} />
-                <img src={images["q_" + colorRef.current]} alt="queen for promotion" onClick={() => choose_promotion("q")} />
+            {draw ? <div className="draw-window">
+                <p>{enemy.username} wants a draw. Do you accept?</p>
+                <div>
+                    <button onClick={(e) => {socket.emit("draw-accept", user.id)}}>✔</button>
+                    <button onClick={(e) => setDraw(previous => false)}>✖</button>
+                </div>
             </div> : <></>}
-
-            {/* Generating figures for board */}
-            { figures.map((element) => {
-                let y = element.y
-                let x =  colorRef.current == "black" ? 7 - element.x : element.x  // Reversing for black
-                // Generating figure component
-                return <Figure key={element.id} x={x} y={y} type={element.name} possible_move={visualBoard[x][y].possible_move} color={element.color} setCurrentFigure={setCurrentFigure} figure_drop={figure_drop} table={tableRef} drag={start_dragging} />
-            })}
-
-            {/* Generating user profile (bottom bar with username, elo and profile picture) */}
-            <div id="your_profile">
-                <div>
-                    {/* Dynamically getting user image from server */}
-                    <img src={`http://localhost:3000/uploads/${user.profile_picture}?t=${new Date().getTime()}`} alt="User profile picture" onError={e => {e.target.src = user_default}} />
-                    <div>
-                        <p>{user.username}</p>
-                        <p>{user.elo}</p>
-                    </div>
-                </div>
-                <span>{timers[colorRef.current] != null ? <p style={{backgroundColor: colorRef.current, color: enemy.color}}>{Math.floor(timers[colorRef.current] / 60)} : {Math.round(timers[colorRef.current] % 60) <= 9 ? "0" + Math.round(timers[colorRef.current] % 60) : Math.round(timers[colorRef.current] % 60)}</p> : ""}</span>
-            </div>
-
             {/* If finished display endgame component */}
-            {finished ? <Endgame won={finished.won} reason={finished.reason} elo={user.elo - finished.reward} reward={finished.reward}></Endgame> : <></>}
+            {finished ? <Endgame won={finished.won} reason={finished.reason} elo={user.elo} reward={finished.reward}></Endgame> : <></>}
         </div>
     )
 }

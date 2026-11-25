@@ -1,7 +1,7 @@
-// ****************************************************************************
-//                          Error 404 component
-// ****************************************************************************
-@use "./varibles" as *;
+// +---------------------------------------------------------------------------------+
+// |                             Error 404 component                                 |
+// +---------------------------------------------------------------------------------+
+@use "./variables" as *;
 
 #error-component{
     @include center_component(100%, 100vh, "column", $backgroundColor);
@@ -9,6 +9,13 @@
         text-align: center;
         h2{
             @include h1_to_h3($h2Size);
+            margin-bottom: 0.5rem;
+        }
+
+        p{
+            @include paragraph();
+            font-size: 1rem;
+            margin-bottom: 2rem;
         }
 
         .link{

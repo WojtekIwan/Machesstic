@@ -24,7 +24,7 @@ export default function SideBar(){
 
     // Logging out when user clicks Link
     function logout(){
-        axios.get("http://localhost:3000/user/logout", {withCredentials: true}).then(res => {
+        axios.get("http://localhost:3000/api/user/logout", {withCredentials: true}).then(res => {
             console.log("You have been logged out!")
             if(socket.connected) socket.disconnect() // Didn`t use catch because only 401 and 403 can occur here and they are handled in main
         })

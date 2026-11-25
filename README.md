@@ -73,6 +73,7 @@ Machesstic/
 │       └── main.jsx            # Main component with routing          
 │  
 ├── server/
+│   ├── uploads/                # Contains profile images    
 │   ├── package.json            # Dependencies for  server          
 │   ├── chess_game.js           # All of game logic        
 │   ├── database_connector.js   # Connection with database      
@@ -110,6 +111,9 @@ In this section you will get specific steps you need to follow to deploy this ap
     SMTP_EMAIL=your_email@gmail.com
     SMTP_PASSWORD=smtp_password
 
+    # Path for client site
+    CLIENT_PATH="http://localhost:3000" # or localhost:5173 if you are in dev mode
+
     ERROR_EMAIL_RECIVER=email_that_will_recive_errors@gmail.com
 
     # After disconnect player have given time in miliseconds to reconnect
@@ -119,7 +123,7 @@ In this section you will get specific steps you need to follow to deploy this ap
     ```
     docker compose up --build 
     ```
-3. If you are not using docker it gets more complicated. You need to follow this steps:
+3. If you are not using docker you need to follow this steps:
     * Create mysql database in and import **schema.sql**
     * For client you need to use:
 
@@ -132,7 +136,6 @@ In this section you will get specific steps you need to follow to deploy this ap
         #If you are running client in development instead of last command type this
         npm run dev
         ```
-    * **IMPORTANT** Copy client/dist to server/public
     * Run server with: 
         ```
         cd ../server # Change directory

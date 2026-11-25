@@ -28,7 +28,7 @@ export default function CreateAccount(){
         // Send request for validating user data. Then the code is sent
         setVeryfing(p => "Veryfing data...")
         setErrorMessage(p => "")     
-        axios.post("http://localhost:3000/user/verify_user", userData, {withCredentials: true}).then((res) => {
+        axios.post("http://localhost:3000/api/user/verify_user", userData, {withCredentials: true}).then((res) => {
             setValidated(p => res.data.validated) // Changing form     
             setVeryfing(p => "")
         }).catch(error => {
@@ -43,7 +43,7 @@ export default function CreateAccount(){
     // Send verification request to backend
     function verify_code(e){
         e.preventDefault() // Prevent loading to another page
-        axios.post(`http://localhost:3000/user/verify_code/${code}`, userData, {withCredentials: true}).then(res => {
+        axios.post(`http://localhost:3000/api/user/verify_code/${code}`, userData, {withCredentials: true}).then(res => {
             setVeryfing(p => "Verification completed!")
             // Redirecting to log in page after short delay (visualy it looks better)
             setTimeout(() => {

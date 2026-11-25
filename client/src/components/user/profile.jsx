@@ -15,7 +15,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 
 // Profile component
 export default function Profile(){
-    const {user} = useContext(userContext) // Variable contains basic user data (username, profile picture, elo etc.)
+    const {user, fetch_data} = useContext(userContext) // Variable contains basic user data (username, profile picture, elo etc.)
     
     // Profile of user and his games
     const [userProfile, setUserProfile] = useState({}) 
@@ -41,7 +41,7 @@ export default function Profile(){
             setUserProfile(previous => user)          
         }else{
             // In other case fetch it or if it fails throw 404
-            axios.get(`http://localhost:3000/user/get_other_user_data/${params.username}`, {withCredentials: true}).then(res => {
+            axios.get(`http://localhost:3000/api/user/get_other_user_data/${params.username}`, {withCredentials: true}).then(res => {
                 setUserProfile(previous => res.data)
             }).catch(error => {
                 navigate("/user/404")
@@ -49,9 +49,8 @@ export default function Profile(){
         }
 
         // Getting games data for given user
-        axios.get(`http://localhost:3000/user/game_stats/${params.username}`, {withCredentials: true}).then(res => {
+        axios.get(`http://localhost:3000/api/user/game_stats/${params.username}`, {withCredentials: true}).then(res => {
             setUserGames(previous => res.data)
-            console.log(res.data)
         }).catch(error => {
             navigate("/user/404")
         })
@@ -66,12 +65,18 @@ export default function Profile(){
         data.append("profileUsername", profileUsername)
         
         // Updating user profile
-        axios.post("http://localhost:3000/user/update_profile", data, {withCredentials: true}).then((res) => {
+        axios.post("http://localhost:3000/api/user/update_profile", data, {withCredentials: true}).then((res) => {
             // Updating tokens for user (the username is updated immediately after change)
-            axios.post("http://localhost:3000/user/refresh_user_tokens", {}, {withCredentials: true}).then(res => {
-                user.fetch_data() // Update user data (tokens are now refreshed)
+            axios.post("http://localhost:3000/api/user/refresh_user_tokens", {}, {withCredentials: true}).then(res => {
+                fetch_data() // Update user data (tokens are now refreshed)
                 setEditingProfile(previous => false)
                 setErrorMessage(previous => null)
+                navigate("/user/profile/" + (profileUsername != "" && profileUsername != null ? profileUsername : user.username))
+
+                // After redirecting clear form
+                setProfileUsername(p => "")
+                setProfileNote(p => "")
+                setProfileImage(p => "")
             })
 
         }).catch(error => {
@@ -87,29 +92,31 @@ export default function Profile(){
                 !editingProfile // If user is not editing a profile display a deafult profile
                 ?
                     <div className="profile">
-                        <div id="main_profile">
-                            {/* Button for going to profile edit if user is on his own profile*/}
-                            {params.username == user.username ? <button onClick={() => setEditingProfile(previous => true)}>🖋️</button>  : <></>}    
-                            <div className="profile_picture">
-                                {/* User profile picture */}
-                                <img src={`http://localhost:3000/uploads/${userProfile.profile_picture}?t=${new Date().getTime()}`} alt="User profile picture" onError={e => {e.target.src = user_default}} />
+                        <div>
+                            <div id="main_profile">
+                                {/* Button for going to profile edit if user is on his own profile*/}
+                                {params.username == user.username ? <button onClick={() => setEditingProfile(previous => true)}>🖋️</button>  : <></>}    
+                                <div className="profile_picture">
+                                    {/* User profile picture */}
+                                    <img src={`http://localhost:3000/uploads/${userProfile.profile_picture}?t=${new Date().getTime()}`} alt="User profile picture" onError={e => {e.target.src = user_default}} />
+                                </div>
+                                <div>
+                                    {/* Basic user data */}
+                                    <h2>{userProfile.username}</h2>
+                                    <i>{userProfile.profile_note ? userProfile.profile_note +  " - " + userProfile.username : ""}</i>  
+                                    <p>Account created in: {String(userProfile.date).split("T")[0]}</p>
+
+                                </div>
                             </div>
-                            <div>
-                                {/* Basic user data */}
-                                <h2>{userProfile.username}</h2>
-                                <i>{userProfile.profile_note ? userProfile.profile_note +  " - " + userProfile.username : ""}</i>  
-                                <p>Account created in: {String(userProfile.date).split("T")[0]}</p>
 
+                            {/* Basic info (elo, games played, highest raiting etc) */}
+                            <div className="player_game_info">
+                                <div><h3>{userProfile.elo}</h3><p>ELO RATING</p></div>
+                                
+                                <div><h3>{userGames.basic_data ? userGames.basic_data.all_games : 0}</h3><p>TOTAL GAMES</p></div>
+
+                                <div><h3>{userProfile.maximal_elo}</h3><p>HIGHEST RAITING</p></div>
                             </div>
-                        </div>
-
-                        {/* Basic info (elo, games played, highest raiting etc) */}
-                        <div className="player_game_info">
-                            <div><h3>{userProfile.elo}</h3><p>ELO RATING</p></div>
-                            
-                            <div><h3>{userGames.basic_data ? userGames.basic_data.all_games : 0}</h3><p>TOTAL GAMES</p></div>
-
-                            <div><h3>{userProfile.maximal_elo}</h3><p>HIGHEST RAITING</p></div>
                         </div>
 
                         {/* Ratios for player (all games must be higher then zero) */}
@@ -127,9 +134,9 @@ export default function Profile(){
                         <div className="player_game_history">
                         {userGames.games && userGames.basic_data && userGames.basic_data.all_games != 0 ? 
                             <div>
-                                {userGames.games.map(game => {
+                                {userGames.games.slice(0, 20).map(game => {
                                     return <div key={game.id}>
-                                        <div className={game.winner == "" ? "dot" : (userProfile.id == game.winner ? "plus" : "minus")}>{game.winner == "" ? "*" : userProfile.id == game.winner ? "+" : "-"}</div>
+                                        <div className={game.winner == "" ? "dot" : (userProfile.id == game.winner ? "plus" : "minus")}>{game.winner == "" ? "=" : userProfile.id == game.winner ? "+" : "-"}</div>
 
                                         <div className="players">
                                             <div>

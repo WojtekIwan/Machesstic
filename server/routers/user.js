@@ -31,7 +31,7 @@ const logger = new Logger()
 // Setting up express router for user routes
 const user_router = express.Router()
 
-// Verification 1: Verifying user account creation
+// Verifying user account creation
 user_router.post("/verify_user", async (req, res) => {
     let username_in_database = await dc.username_in_database(req.body.username) // Correct username which is not taken
     let is_not_email = String(req.body.email).includes("@") ? false : "It`s not an email!" // Check if its an email
@@ -64,7 +64,7 @@ user_router.post("/verify_user", async (req, res) => {
     }
 })
 
-// Verification 2: Verifying user code
+//  Verifying user code
 user_router.post("/verify_code/:code", async (req, res) => {
     if(req.cookies.code == null) return res.status(400).json({verified: false, error_message: "Your code expire. Try again"})
 
@@ -94,10 +94,9 @@ user_router.post("/create_jwt", async (req, res) => {
         let tokens = await jwt_connector.create_tokens(req.body.user_id) // Create jwt tokens
         
         if(!tokens) return res.status(400) // Something went wrong with tokens, send error
-
         res.cookie("accessToken", tokens.accessToken, auth_consts.cookie_placeholder(auth_consts.fifteen_minuts)) // Access token cookie with 15 minutes expiretion
         res.cookie("refreshToken", tokens.refreshToken, auth_consts.cookie_placeholder(auth_consts.one_week)) // Refresh token cookie with one week expiretion
-    
+
         return res.sendStatus(200)
     }catch(err){
         return res.sendStatus(500)
@@ -169,19 +168,16 @@ let upload = multer({storage: storage,
     limits: { fileSize: 1 * 1024 * 1024 } 
  })
 
- const image_uploaded = upload.single('profileImage') // Function that uploads images (profile pictures in this case)
+const image_uploaded = upload.single('profileImage') // Function that uploads images (profile pictures in this case)
 
  // Upadting user profile (profile picture, note and username)
 user_router.post('/update_profile', jwt_connector.authenticate_token, (req, res) => {
     image_uploaded(req, res, async function (err) {
-        if (err) {     
-            return res.status(400).json({message: err.message}) // Error happend while uploading an image
-        }
+        if (err) return res.status(400).json({message: err.message}) // Error happend while uploading an image
 
         let data = await dc.get_user_additional_data(req.user_id)
-
         // Deleting other profile picture if exist (if extension is diffrent it will be deleted, otherwise replaced)
-        if(data.additional.profile_image_path != req.profileImagePath){
+        if(req.profileImagePath != null && data.additional.profile_image_path != req.profileImagePath){
             fs.unlink(path.join(process.cwd(), "uploads", data.additional.profile_image_path), (err) => {
                 if(err)  logger.warning("No file found")
                 logger.okay("File deleted succesfully")    

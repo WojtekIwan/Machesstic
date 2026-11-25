@@ -9,7 +9,7 @@
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
-SET time_zone = "+00:00";
+-- SET time_zone = "+00:00";
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -36,7 +36,8 @@ CREATE TABLE `chess_games` (
   `moves` varchar(1000) NOT NULL,
   `winner` varchar(36) NOT NULL,
   `finished` tinyint(1) NOT NULL,
-  `finish_reason` varchar(11) NOT NULL
+  `finish_reason` varchar(11) NOT NULL,
+  `start_time` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -65,6 +66,19 @@ CREATE TABLE `user_additional_info` (
   `profile_note` varchar(50) NOT NULL,
   `maximal_elo` int(11) NOT NULL DEFAULT 100
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+-- --
+-- -- Struktura tabeli dla tabeli `friends`
+-- --
+
+CREATE TABLE `friends` (
+  `id` varchar(36) NOT NULL,
+  `user1` varchar(36) NOT NULL,
+  `user2` varchar(36) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 -- --------------------------------------------------------
 

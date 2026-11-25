@@ -15,6 +15,7 @@ export default function Tile(props){
     return (
         <div key={x + "-" + y} className={(x + y) % 2 != 0 ? "dark_tile chess_tile" : "light_tile chess_tile"}>
             {props.possible_move ? <div className="possible_move"></div> : <></>}
+            {/* If tile is on the end of the board the notation is displayed */}
             {x_notation ? <div className="notation_x">{x_notation}</div> : <></>}
             {y_notation ? <div className="notation_y">{y_notation}</div> : <></>}
         </div>

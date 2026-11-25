@@ -31,7 +31,7 @@ export default function Login(){
     function check_login_data(e){
         e.preventDefault() // Not redirecting to another page yet
         // Sending request to log user in
-        axios.post("http://localhost:3000/user/login", {"usernameOrEmail": usernameOrEmail, "password": password}).then((res) => {
+        axios.post("http://localhost:3000/api/user/login", {"usernameOrEmail": usernameOrEmail, "password": password}).then((res) => {
             send_request_to_create_jwt_token(res.data.id)
         }).catch((error) => {
             // Catch error from server (wrong password, not filling every input etc)
@@ -41,7 +41,7 @@ export default function Login(){
 
     // Sending request for creating jwt token
     function send_request_to_create_jwt_token(user_id){
-        axios.post("http://localhost:3000/user/create_jwt", {"user_id": user_id}, {withCredentials: true}).then(res => {
+        axios.post("http://localhost:3000/api/user/create_jwt", {"user_id": user_id}, {withCredentials: true}).then(res => {
             user.fetch_data()
             navigate("/user") // After creating tokens navigate to user main page
         }).catch((error) => {

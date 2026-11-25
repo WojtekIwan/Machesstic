@@ -35,15 +35,15 @@ export default function GameReview(){
 
     useEffect(() => {
         // Game review is only possible to see by certain player
-        axios.get(`http://localhost:3000/after_game_data/${params.id}`, {withCredentials: true}).then(res => {
+        axios.get(`http://localhost:3000/api/after_game_data/${params.id}`, {withCredentials: true}).then(res => {
             // Checking if game is checked by players who played or not
-            let user_color
+            setGame(p => res.data.game)
             setWinner(previous =>  res.data.winner)
 
             // By default winner is on bottom
             setBottom(previous => res.data.winner)
             setUpper(previous => res.data.loser)
-            user_color = res.data.winner.color
+            let user_color = res.data.winner.color
 
             // In case if user is from game and lost reverse it so loser is on bottom
             let is_in_game = user.id == res.data.winner.id || user.id == res.data.loser.id
@@ -54,11 +54,17 @@ export default function GameReview(){
             }
 
             setColor(previous => user_color)
-            setMoves(previous => res.data.game.moves.split("|").map(element => {
-                return {"old_move": element.slice(2, 4), "new_move": element.slice(4), "figure": element.slice(0, 2)}
-            }))
+            // No moves were made in this game
+            if(res.data.game.moves == ""){
+                setMoves(previous => [""])
+            }else{
+                // Spliting moves into array
+                setMoves(previous => res.data.game.moves.split("|").map(element => {
+                    return {"old_move": element.slice(2, 4), "new_move": element.slice(4), "figure": element.slice(0, 2)}
+                }))
+            }
 
-            // Generating board from deafult game start
+            // Generating board for deafult game start (just like in game component)
             let pom_board = []
             for(let i = 0; i < 8; i++){
                 pom_board.push([])
@@ -73,6 +79,7 @@ export default function GameReview(){
             }
             setBoard(previous => pom_board)
         }).catch(error => {
+            // In case that something went wrong redirect to game error
             navigate("/game/error")
         })
     }, [user])
@@ -98,7 +105,7 @@ export default function GameReview(){
 
     // Going to next moves in game history
     function go_forward(){
-        if(index + 1 == moves.length) return
+        if(index + 1 >= moves.length - 1) return // You are out of index, return
 
         let i = index + 1 < moves.length ?  index + 1 : index
         setIndex(previous => i)
@@ -106,6 +113,7 @@ export default function GameReview(){
         let old_move = [...moves[i].old_move]
         let new_move = [...moves[i].new_move]
 
+        // Flipping the figure for player that plays with black
         if(color == "black"){
             old_move[0] = 7 - old_move[0]
             new_move[0] = 7 - new_move[0]
@@ -113,7 +121,6 @@ export default function GameReview(){
 
         // Replacing figures (and if it`s taking figure and storing it in object)
         let pom_board = board
-
         let p = pom_board[old_move[0]][old_move[1]]
 
         if(pom_board[new_move[0]][new_move[1]].name != "."){
@@ -128,7 +135,7 @@ export default function GameReview(){
 
     // Going to previous moves of game
     function go_back(){
-        if(index < 0) return 
+        if(index < 0) return // Index is out of the range so return
 
         let old_move = [...moves[index].old_move]
         let new_move = [...moves[index].new_move]
@@ -197,12 +204,12 @@ export default function GameReview(){
             
                 {/* Sidebar info + moves control */}
                 <div id="side_game_info">
-                    <h2>{winner.id == user.id ? "You won" : "You lost"}</h2>
-                    <p>{game.finish_reason}</p>
+                    {/* if player is neither winner or loser display ('someone' won) */}
+                    <h2>{game.finish_reason == "draw" || game.finish_reason == "stalemate" ? "Draw" : winner.id == user.id ? "You won" : "You lost"}</h2>
                     
                     <div id="game_history">
                         {moves.map((element, i) => {
-                            if(element == "") return
+                            if(element == "" || element.figure == "") return
                             let notations = "abcdefgh" // Side numeration
                             return <div className="mini_figure" key={i} style={{backgroundColor: i == index ? "gray" : ""}}>
                                 <MiniFigurePicture color={element.figure[0]} type={element.figure[1]}/> {i + 1}. {(notations[element.new_move[1]]) + (Number(7 - element.new_move[0] + 1))}
@@ -210,10 +217,13 @@ export default function GameReview(){
                         })}
                     </div>
                     {/* Going through game history */}
+                    {moves.length != 0 && moves[0] != "" ? 
                     <div id="back_and_forward_history">
                         <button onClick={go_back}>&#8592;</button>
                         <button onClick={go_forward}>&#8594;</button>
-                    </div>
+                    </div>:
+                    <p className="no_moves">No move were made in this game</p>
+                    }
                     <Link className="btn" to={"/user"}>Go to main menu</Link>
                 </div>
             </div>
@@ -230,6 +240,17 @@ export default function GameReview(){
                 <span>
                     <p style={{backgroundColor: color, color: upper.color}}>{winner.id == bottom.id ? "Winner" : "Loser"}</p>
                 </span>
+            </div>
+            {/* If game info dont fit the horizontal game info is displayed */}
+            <div id="horizontal_game_info">
+                {moves.length != 0 && moves[0] != "" ? 
+                <div id="back_and_forward_history">
+                    <button onClick={go_back}>&#8592;</button>
+                    <button onClick={go_forward}>&#8594;</button>
+                </div>:
+                <p className="no_moves">No move were made in this game</p>
+                }
+                <Link className="btn" to={"/user"}>Go to main menu</Link>
             </div>
         </div>
     </div>

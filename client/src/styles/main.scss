@@ -4,11 +4,12 @@
 @use "./log_in";
 @use "./game";
 @use "./endgame";
-@use "./user_page";
+@use "./profile";
 @use "./about";
 @use "./sidebar";
 @use "./friends";
 @use "./main_page";
+@use "./play";
 
 body{
     margin: 0rem;

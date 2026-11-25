@@ -31,7 +31,7 @@ import io from 'socket.io-client';
 import axios from 'axios'
 
 // Socket 
-const socket = io('http://localhost:3000', {withCredentials: true, autoConnect: false})
+const socket = io('http://localhost:3000', {withCredentials: true, autoConnect: false, reconnection: true, reconnectionAttempts: 10, reconnectionDelay: 1000})
 
 export const socketContext = createContext() // Socket context
 export const userContext = createContext() // User context with basic user data
@@ -42,12 +42,12 @@ const router = createBrowserRouter([
   {path: "/", element: <Navigate to="/user/login" replace />}, // Navigating to user login automaticly
   
   {path: "/user/login", element: <Login/>}, // User login page
+  { path: "/user/create_account", element: <CreateAccount/>}, // Account creation page
   // Protected routes - you need to be logged in
   {
     element: <ProtectedRoute/>,
     children: [
        { path: "/user", element: <UserPage/>}, // User main page,
-       { path: "/user/create_account", element: <CreateAccount/>}, // Account creation page
        { path: "/user/play", element: <Play/>}, // User play page
        { 
         path: "/user/profile/:username", 
@@ -68,7 +68,7 @@ const router = createBrowserRouter([
 
   {path: "/user/error", element: <Error error={"You are not logged in!"} additional={"To access this content you need to log in"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
 
-  {path: "/user/logout", element: <Error error={"You`ve been logged out`!"} additional={"Log in again!"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
+  {path: "/user/logout", element: <Error error={"You`ve been logged out!"} additional={"Log in again!"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
 
   {path: "/user/404", element: <Error error={"This user dosen`t exist!"} additional={"Try checking for spelling mistakes"} image={rageGif} image_alt={"chess rage gif"}/>}, // You are not logged in
 ])
@@ -79,8 +79,8 @@ axios.interceptors.response.use((res) => {return res},
     let path = window.location.pathname // Current path
     // 401 tokens are here but not authenticated
     if(error.status == 401){
-      axios.post("http://localhost:3000/user/refresh_user_tokens", {withCredentials: true}).catch(err => {
-        axios.get("http://localhost:3000/user/logout", {withCredentials: true})
+      axios.post("http://localhost:3000/api/user/refresh_user_tokens", {withCredentials: true}).catch(err => {
+        axios.get("http://localhost:3000/api/user/logout", {withCredentials: true})
         window.location.href = "/user/logout"
         return Promise.reject(error)
       })
@@ -88,7 +88,7 @@ axios.interceptors.response.use((res) => {return res},
 
     // There are no tokens to authanticate or refresh
     if(error.status == 403){
-      if(path != "/user/login" && path != "/user/error" && path != "/user/logout") window.location.href = "/user/error" 
+      if(path != "/user/create_account" && path != "/user/login" && path != "/user/error" && path != "/user/logout") window.location.href = "/user/error" 
     }
     return Promise.reject(error)
 })
@@ -117,19 +117,27 @@ function MainLayout(){
     
     // If socket could connect (middleware error for cookies in most times) re-fetch data
     socket.on("connect_error", error_conncetion_handler);
-    
-    if(!user.id || !user.username || !user.elo) fetch_user_data()  
+
+    fetch_user_data()  
        
+    // UseEffect with socket io event for starting game
+    function start(game_id){
+      console.log("starting game!!!")
+      window.location.href = `/game/${game_id}`
+    }
+
+    socket.on("start-game", start)
     // Clean up function
     return () => {
       socket.off("connect_error", error_conncetion_handler)
-      socket.disconnect()
+      socket.off("start-game", start)
     };
-  }, [])
+
+  }, [socket])
 
   // Fetch user data from backend
   async function fetch_user_data(){
-    await axios.get("http://localhost:3000/user/get_user_full_data", {withCredentials: true}).then(res => {
+    await axios.get("http://localhost:3000/api/user/get_user_full_data", {withCredentials: true}).then(res => {
       // Getting main data - most important 
       setUser(previous => ({
         username: res.data.username,
@@ -141,9 +149,10 @@ function MainLayout(){
         maximal_elo: res.data.maximal_elo
       }))
 
-      if(!socket.connected) socket.connect() // Reconnect if needed
+      if(!socket.connected){
+        socket.connect() // Reconnect if needed
+      } 
       socket.emit("join-server", res.data.id, res.data.username, res.data.elo) // After refreshing data, join server again
-      
     })
     setLoading(false)   
   }
@@ -151,7 +160,7 @@ function MainLayout(){
   // Rendering app
   return (
     <socketContext.Provider value={socket}>
-      <userContext.Provider value={{fetch_data: fetch_user_data, user: user, loading: loading}}>
+      <userContext.Provider value={{fetch_data: fetch_user_data, setUser: setUser, user: user, loading: loading}}>
         <RouterProvider router={router}/>
       </userContext.Provider>
     </socketContext.Provider>

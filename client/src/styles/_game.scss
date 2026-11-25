@@ -1,50 +1,63 @@
-@use "./varibles" as *;
+@use "./variables" as *;
 
-.dark_tile {
-  background-color: rgb(103, 56, 32);
-}
 
-.light_tile {
-  background-color: rgb(167, 108, 79);
-}
+
+// +---------------------------------------------------------------------------------+
+// |                               TILE SUB-STYLES                                   |
+// +---------------------------------------------------------------------------------+
+
+.dark_tile { background-color: $tileDarkColor; }
+
+.light_tile { background-color: $tileLightColor; }
 
 .chess_tile {
   width: 4rem;
   height: 4rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  @include display_flex(center, center, row);
   position: relative;
 
-  &:hover {
-    background-color: rgb(201, 186, 172);
+  &:hover { background-color: $tileHoverColor; }
+}
+
+// +---------------------------------------------------------------------------------+
+// |                             FIGURE SUB-STYLES                                   |
+// +---------------------------------------------------------------------------------+
+
+.figure {
+  overflow: hidden;
+  position: fixed;
+  
+  touch-action: none;
+  
+  height: 4rem;
+  width: 4rem;
+  
+  @include display_flex(center, center, row);
+  
+  img{
+    height: 4rem;
+    width: 4rem;
+    overflow: hidden;
+    position: relative;
+    image-rendering: pixelated;
+    transform: scale(0.75); // Scale so figure dont take whole space
   }
+}
+
+// This is responsible for highligting a figrue if it can be taken
+.can_take {
+  filter: drop-shadow(2px 2px 0 $additionalPurple)
+            drop-shadow(-2px 2px 0 $additionalPurple)
+            drop-shadow(2px -2px 0 $additionalPurple)
+            drop-shadow(-2px -2px 0 $additionalPurple);
 }
 
 td {
   padding: 0rem !important;
 }
 
-.figure {
-  overflow: hidden;
-  position: fixed;
-  touch-action: none;
-  height: 4rem;
-  width: 4rem;
-  
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  img{
-    overflow: hidden;
-    position: relative;
-    height: 4rem;
-    width: 4rem;
-    image-rendering: pixelated;
-    transform: scale(0.75);
-  }
-}
+
+
 
 #main_container {
   overflow: hidden;
@@ -52,7 +65,7 @@ td {
   height: 100vh;
 
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   background-color: $backgroundColorSecondary;
@@ -69,7 +82,7 @@ td {
     position: relative;
   }
 
-  #side_game_info {
+  #side_game_info, #horizontal_game_info{
     background-color: $backgroundColor;
     width: 20rem;
     margin-left: 2rem;
@@ -140,6 +153,11 @@ td {
     }
   }
 
+  #horizontal_game_info{
+    display: none;
+  }
+
+
   #game_board {
     max-width: 32rem;
     max-height: 32rem;
@@ -187,10 +205,6 @@ td {
   left: 110%;
 
   @include paragraph();
-}
-
-.can_take {
-  border: 0.1rem solid $errorRed;
 }
 
 #your_profile {
@@ -306,5 +320,152 @@ td {
   }
 }
 
-// C0C0C0 CCCCCC - shadowing for white FFFFFF
-// 404040 1e1e1e - shadowing for black 000000
+.draw-window{
+  background-color: $backgroundColor;
+  width: 15rem;
+  height: 5rem;
+  padding: 0.25rem;
+  position: absolute;
+  right: 10%;
+  bottom: 12%;
+
+  p{
+    @include paragraph();
+  }
+
+  div{
+    @include display_flex(space-around, center, row);
+
+    button{
+      background-color: $backgroundColor;
+      color: $fontColor;
+      height: 1.5rem;
+      width: 4rem;
+      margin: 0.5rem;
+      border: none;
+    }
+  }
+
+
+}
+
+.game-options{
+  margin-left: 2rem;
+  float: left;
+  display: flex;
+  flex-direction: column;
+  button{
+    background-color: $backgroundColor;
+    color: $fontColor;
+    font-size: $h3Size;
+    height: 4rem;
+    width: 4rem;
+    margin: 0.5rem;
+    border: none;
+
+    &:hover{
+      background-color: $additionalPink;
+    }
+  }
+}
+
+// For medium+ devices (I made this sizes up)
+@media (max-width: 900px) {
+  #game_board{
+    max-width: 24rem;
+    max-height: 24rem;
+  }
+
+  .no_moves{
+    height: 50% !important;
+  }
+
+  .figure{
+    width: 3rem;
+    height: 3rem;
+
+    img{
+      width: 3rem;
+      height: 3rem;
+    }
+  }
+
+  #side_game_info{
+    height: 24rem !important;
+    overflow-y: scroll;
+    scrollbar-color: $backgroundColorSecondary $backgroundColor;
+    scrollbar-width: 0.5rem;
+  }
+
+  .chess_tile{
+    width: 3rem;
+    height: 3rem;
+  }
+
+  #enemy_profile, #your_profile{
+    width: 24rem;
+  }
+}
+
+// For medium devices
+@media (max-width: 750px) {
+  #side_game_info{
+    display: none;
+  }
+
+  #horizontal_game_info{
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    height: 6rem !important;
+    margin-top: 0rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem;
+
+    #back_and_forward_history{
+      margin-top: 0rem !important;
+    }
+  }
+}
+
+@media (max-width: 550px) {
+  #main_container{
+    flex-direction: column;
+    .game-options{
+      flex-direction: row;
+    }
+  }
+}
+
+// For small devices
+@media (max-width: 425px) {
+  #game_board{
+    max-width: 18rem;
+    max-height: 18rem;
+  }
+
+  .figure{
+    width: 2.25rem;
+    height: 2.25rem;
+
+    img{
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+  }
+
+  .chess_tile{
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  #enemy_profile, #your_profile{
+    width: 18rem;
+  }
+
+  #horizontal_game_info{
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+  }
+}

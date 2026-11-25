@@ -1,36 +1,19 @@
-// ***********************************************************************************
-//                                     LOGGER
-//                    Prints prettier logs (I was really bored)
-// ***********************************************************************************
+// +---------------------------------------------------------------------------------+
+// |                                    LOGGER                                       |
+// |                    Prints prettier logs (I was really bored)                    |
+// +---------------------------------------------------------------------------------+
 
 export default class Logger{
-    // White bold text 
-    title(message){
-        console.log("\x1b[1m%s\x1b[0m", `[📢 ] ${message}`)
-    }
+    
+    title(message){ console.log("\x1b[1m%s\x1b[0m", `[ 📢 ] ${message}`) } // White bold text 
 
-    // Red text
-    error(message){
-        console.log("\x1b[31m%s\x1b[0m", `[❌ ] ${message}`)
-    }
+    error(message){ console.log("\x1b[31m%s\x1b[0m", `[ ❌ ] ${message}`) } // Red text
 
-    // Yellow text
-    warning(message){
-        console.log("\x1b[33m%s\x1b[0m", `[⚠️ ] ${message}`)
-    }
+    warning(message){ console.log("\x1b[33m%s\x1b[0m", `[ ⚠️ ] ${message}`) } // Yellow text
 
-    // Green text
-    okay(message){
-        console.log("\x1b[32m%s\x1b[0m", `[✅ ] ${message}`)
-    }
+    okay(message){ console.log("\x1b[32m%s\x1b[0m", `[ ✅ ] ${message}`) } // Green text
 
-    // White text
-    default_message(message){
-        console.log(`[📃 ] ${message}`)
-    }
+    default_message(message){ console.log(`[ 📃 ] ${message}`) } // White text
 
-    // White text but with waiting
-    wait_message(message){
-        console.log(`[⏳ ] ${message}`)
-    }
+    wait_message(message){ console.log(`[ ⏳ ] ${message}`) } // White text but with waiting
 }

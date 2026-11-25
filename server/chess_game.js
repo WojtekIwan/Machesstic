@@ -29,7 +29,6 @@ export class ChessGame{
                     if(figure.name == "K"){
                         this.kings[figure.color] = [i, j]
                     }
-
                     this.board[i].push(figure)
                 }else{
                     this.board[i].push({name: f}) // Empty tile '.'
@@ -59,17 +58,14 @@ export class ChessGame{
                 // If it`s enemy figure check it`s possible moves. Then if player king is in that moves return true
                 if(this.board[i][j].name != "." && this.board[i][j].color != checkedColor){
                     let figure = this.board[i][j]
-                    figure.possible_moves = [] // because there was a lot of same moves repeated
-                    
+                    figure.possible_moves = [] // because there was a lot of same moves repeated   
                     eval(`this.${String(figure.name).toLowerCase()}_moves(${i}, ${j}, '${figure.color}')`)
                     for(let p = 0; p < figure.possible_moves.length; p++){
                         if(figure.possible_moves[p][0] == this.kings[checkedColor][0] && figure.possible_moves[p][1] ==  this.kings[checkedColor][1]){
-                            // There is a check from an enemy figure (return true)
-                            
+                            // There is a check from an enemy figure (return true)           
                             return true
                         }
                     }
-
                     figure.possible_moves = [] // because there was a lot of same moves repeated
                 }
             }
@@ -89,9 +85,7 @@ export class ChessGame{
         // If it`s player turn procced to move
         if(turn){
             // If not in possible moves than move can`t be made
-            if(!this.contains_move(this.board[pom_x][old_y], x, y)){
-                return {can_move: false}
-            }
+            if(!this.contains_move(this.board[pom_x][old_y], x, y)) return {can_move: false}
             
             if(x == pom_x && y == old_y) return {can_move: false} // Figure returend to original position, so move wasn`t made
 
@@ -285,12 +279,10 @@ export class ChessGame{
         // El passant
         if(this.in_board(x, y - 1) && this.board[x][y - 1].name == "P" &&  this.board[x][y - 1].color != color && this.board[x][y - 1].en_passant){
             pawn.possible_moves.push([x + pom, y - 1])
-            console.log(this.board[x][y - 1])
         }
 
         if(this.in_board(x, y + 1) && this.board[x][y + 1].name == "P" && this.board[x][y + 1].color != color  && this.board[x][y + 1].en_passant){
             pawn.possible_moves.push([x + pom, y + 1])
-            console.log(this.board[x][y + 1].en_passant)
         }
 
         return pawn.possible_moves

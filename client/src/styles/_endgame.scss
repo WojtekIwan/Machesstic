@@ -1,19 +1,25 @@
-// ***********************************************************************************
-//                                 ENDGAME STYLES
-//                            Styling endgame window  
-// ***********************************************************************************
-@use "./varibles" as *;
+// +---------------------------------------------------------------------------------+
+// |                                ENDGAME STYLES                                   |
+// |                             Styling endgame window                              |  
+// +---------------------------------------------------------------------------------+
+@use "./variables" as *;
 
 // Main container for endgame
+#endgame_container:before{
+    @include gradient_border($additionalPink, $additionalPurple);
+    z-index: 1;
+}
+
 #endgame_container{
     width: 30rem;
-    height: 20rem;
+    height: 18rem;
 
     position: absolute;
     
     background-color: $backgroundColor;
 
     text-align: center;
+    border-radius: 1rem;
 
     // Won/lose title
     h2{
@@ -29,24 +35,32 @@
     }
 
     // Elo gain/loss
-    p{
-        @include paragraph();
-    }
+    p{ @include paragraph(); }
 
     // Operation buttons
     div{
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
+        @include display_flex(space-around, center, row);
 
         .btn{
             @include button($additionalPink, $fontColor);
-            width: 6rem;
-            text-decoration: none;
+            @include display_flex(center, center, row);
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 10rem;
+            text-decoration: none;
+            z-index: 2;
         }
     }
+}
+
+// For medium screens
+@media (max-width: 900px) {
+    #endgame_container{
+        width: 25rem;
+        height: 16rem;
+    }
+}
+
+// For small screens
+@media (max-width: 425px) {
+    #endgame_container{ width: 16rem; }
 }
